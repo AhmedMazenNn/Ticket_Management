@@ -86,8 +86,8 @@ make createsuperuser
 | Service | URL |
 |---|---|
 | Frontend | http://localhost:5173 |
-| Backend API | http://localhost:8000/api/v1/ |
-| Swagger UI | http://localhost:8000/api/schema/swagger-ui/ |
+| Backend API | http://localhost:8000/api/ |
+| Swagger UI | http://localhost:8000/api/docs/ |
 | Django Admin | http://localhost:8000/admin/ |
 | RabbitMQ UI | http://localhost:15672 |
 
