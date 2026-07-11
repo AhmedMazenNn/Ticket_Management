@@ -1,0 +1,8 @@
+[tool.pyrefly]
+# Point Pyrefly at the project's virtual environment so all installed
+# packages (Django, Celery, sentry-sdk, etc.) resolve correctly.
+python_environment = ".venv"
+search_paths = ["."]
+
+[tool.pyrefly.per_file_ignore_errors]
+# No per-file suppressions needed — all packages are installed in the venv.
