@@ -1,10 +1,12 @@
 from django.contrib.auth import get_user_model
+from drf_spectacular.utils import extend_schema
 from rest_framework import generics, status
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.views import TokenRefreshView as BaseTokenRefreshView
 
 from .serializers import LoginSerializer, RegisterSerializer, UserSerializer
 from .services import authenticate_user
@@ -12,6 +14,7 @@ from .services import authenticate_user
 User = get_user_model()
 
 
+@extend_schema(tags=["Authentication"])
 class RegisterView(APIView):
     permission_classes = [AllowAny]
     serializer_class = RegisterSerializer
@@ -34,6 +37,7 @@ class RegisterView(APIView):
         )
 
 
+@extend_schema(tags=["Authentication"])
 class LoginView(APIView):
     permission_classes = [AllowAny]
     serializer_class = LoginSerializer
@@ -65,6 +69,7 @@ class LoginView(APIView):
         )
 
 
+@extend_schema(tags=["Authentication"])
 class LogoutView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -92,6 +97,7 @@ class LogoutView(APIView):
         )
 
 
+@extend_schema(tags=["Users"])
 class CurrentUserView(generics.RetrieveUpdateAPIView):
     permission_classes = [IsAuthenticated]
     serializer_class = UserSerializer
@@ -100,8 +106,14 @@ class CurrentUserView(generics.RetrieveUpdateAPIView):
         return self.request.user
 
 
+@extend_schema(tags=["Users"])
 class UserListView(generics.ListAPIView):
     permission_classes = [IsAuthenticated]
     serializer_class = UserSerializer
     queryset = User.objects.filter(is_active=True)
     pagination_class = None
+
+
+@extend_schema(tags=["Authentication"])
+class TokenRefreshView(BaseTokenRefreshView):
+    """Refresh an access token."""
