@@ -6,6 +6,7 @@ import type {
 	RefreshResponse,
 	RegisterPayload
 } from '$lib/types/auth';
+import type { Comment, CreateCommentPayload, UpdateCommentPayload } from '$lib/types/comment';
 import type {
 	CreateTicketPayload,
 	PaginatedResponse,
@@ -201,6 +202,28 @@ export class ApiClient {
 		assigned_tickets: Ticket[];
 	}> {
 		return this.request('/tickets/my_stats/');
+	}
+
+	async listComments(ticketId: string): Promise<Comment[]> {
+		return this.request<Comment[]>(`/tickets/${ticketId}/comments/`);
+	}
+
+	async createComment(ticketId: string, payload: CreateCommentPayload): Promise<Comment> {
+		return this.request<Comment>(`/tickets/${ticketId}/comments/`, {
+			method: 'POST',
+			body: JSON.stringify(payload)
+		});
+	}
+
+	async updateComment(commentId: string, payload: UpdateCommentPayload): Promise<Comment> {
+		return this.request<Comment>(`/comments/${commentId}/`, {
+			method: 'PUT',
+			body: JSON.stringify(payload)
+		});
+	}
+
+	async deleteComment(commentId: string): Promise<void> {
+		await this.request<void>(`/comments/${commentId}/`, { method: 'DELETE' });
 	}
 }
 

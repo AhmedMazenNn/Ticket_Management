@@ -5,10 +5,14 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from apps.accounts.models import User
+
 from .filters import TicketFilter
 from .models import Ticket
+from .permissions import CanCreateTicket, CanEditTicket
 from .selectors import get_ticket, get_ticket_list
 from .serializers import (
+    TicketAgentUpdateSerializer,
     TicketCreateSerializer,
     TicketDetailSerializer,
     TicketListSerializer,
@@ -19,9 +23,9 @@ from .services import create_ticket, delete_ticket, update_ticket
 
 @extend_schema(tags=["Tickets"])
 class TicketListCreateView(generics.ListCreateAPIView):
-    """List all tickets with filtering/search/ordering, or create a new ticket."""
+    """List tickets (scoped by role) or create a new ticket."""
 
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, CanCreateTicket]
     filterset_class = TicketFilter
     search_fields = ["title", "description"]
     ordering_fields = ["created_at", "updated_at", "priority"]
@@ -33,7 +37,7 @@ class TicketListCreateView(generics.ListCreateAPIView):
         return TicketListSerializer
 
     def get_queryset(self):
-        return get_ticket_list()
+        return get_ticket_list(user=self.request.user)
 
     def create(self, request: Request, *args, **kwargs) -> Response:
         serializer = self.get_serializer(data=request.data)
@@ -58,12 +62,14 @@ class TicketListCreateView(generics.ListCreateAPIView):
 class TicketDetailView(generics.RetrieveUpdateDestroyAPIView):
     """Retrieve, update, or delete a ticket."""
 
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, CanEditTicket]
     lookup_field = "id"
     http_method_names = ["get", "put", "patch", "delete"]
 
     def get_serializer_class(self):
         if self.request.method in ("PUT", "PATCH"):
+            if self.request.user.role == User.Role.AGENT:
+                return TicketAgentUpdateSerializer
             return TicketUpdateSerializer
         return TicketDetailSerializer
 
@@ -73,11 +79,23 @@ class TicketDetailView(generics.RetrieveUpdateDestroyAPIView):
             from rest_framework.exceptions import NotFound
 
             raise NotFound
+        self.check_object_permissions(self.request, ticket)
         return ticket
 
     def update(self, request: Request, *args, **kwargs) -> Response:
         partial = kwargs.pop("partial", False)
         ticket = self.get_object()
+
+        if request.user.role == User.Role.AGENT:
+            allowed_fields = {"status"}
+            disallowed = set(request.data) - allowed_fields
+            if disallowed:
+                from rest_framework.exceptions import ValidationError
+
+                raise ValidationError(
+                    dict.fromkeys(disallowed, "Agents may only update the status field.")
+                )
+
         serializer = self.get_serializer(ticket, data=request.data, partial=partial)
         serializer.is_valid(raise_exception=True)
 
@@ -96,15 +114,18 @@ class DashboardStatsView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request: Request) -> Response:
-        qs = Ticket.objects.all()
+        user = request.user
+        if user.role == User.Role.AGENT:
+            qs = Ticket.objects.filter(assigned_to=user)
+        else:
+            qs = Ticket.objects.all()
+
         total = qs.count()
         open_count = qs.filter(status=Ticket.Status.OPEN).count()
         in_progress = qs.filter(status=Ticket.Status.IN_PROGRESS).count()
         closed = qs.filter(status=Ticket.Status.CLOSED).count()
 
-        recent = Ticket.objects.select_related("assigned_to", "created_by").order_by(
-            "-created_at"
-        )[:5]
+        recent = qs.select_related("assigned_to", "created_by").order_by("-created_at")[:5]
 
         return Response(
             {

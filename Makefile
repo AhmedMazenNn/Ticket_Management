@@ -51,8 +51,8 @@ createsuperuser: ## Create a Django admin superuser
 collectstatic: ## Collect static files
 	docker compose exec backend python manage.py collectstatic --noinput
 
-seed: ## Load fixture data into the database
-	docker compose exec backend python manage.py loaddata fixtures/initial_data.json
+seed: ## Seed database with sample data
+	cd backend && source .venv/bin/activate && python manage.py seed
 
 # -----------------------------------------------------------------------
 # Backend testing & linting

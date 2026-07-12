@@ -66,8 +66,12 @@ class TicketCreateSerializer(serializers.ModelSerializer):
         read_only_fields = ["id"]
 
     def validate_assigned_to(self, value):
-        if value is not None and not value.is_active:
+        if value is None:
+            return value
+        if not value.is_active:
             raise serializers.ValidationError("Cannot assign to an inactive user.")
+        if value.role != User.Role.AGENT:
+            raise serializers.ValidationError("Only users with the AGENT role can be assigned.")
         return value
 
 
@@ -83,6 +87,18 @@ class TicketUpdateSerializer(serializers.ModelSerializer):
         ]
 
     def validate_assigned_to(self, value):
-        if value is not None and not value.is_active:
+        if value is None:
+            return value
+        if not value.is_active:
             raise serializers.ValidationError("Cannot assign to an inactive user.")
+        if value.role != User.Role.AGENT:
+            raise serializers.ValidationError("Only users with the AGENT role can be assigned.")
         return value
+
+
+class TicketAgentUpdateSerializer(serializers.ModelSerializer):
+    """Restricted serializer for agents — may only update status."""
+
+    class Meta:
+        model = Ticket
+        fields = ["status"]

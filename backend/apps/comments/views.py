@@ -1,9 +1,11 @@
 from drf_spectacular.utils import extend_schema
 from rest_framework import generics, status
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
 
+from apps.accounts.models import User
 from apps.tickets.selectors import get_ticket
 
 from .permissions import IsAuthorOrAdmin
@@ -36,6 +38,9 @@ class CommentListCreateView(generics.ListCreateAPIView):
             from rest_framework.exceptions import NotFound
 
             raise NotFound("Ticket not found.")
+
+        if request.user.role == User.Role.AGENT and ticket.assigned_to != request.user:
+            raise PermissionDenied("You can only comment on tickets assigned to you.")
 
         comment = create_comment(
             ticket=ticket,
