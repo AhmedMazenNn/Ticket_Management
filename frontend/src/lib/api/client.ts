@@ -8,6 +8,7 @@ import type {
 } from '$lib/types/auth';
 import type { Comment, CreateCommentPayload, UpdateCommentPayload } from '$lib/types/comment';
 import type { TicketHistoryEntry } from '$lib/types/history';
+import type { Notification } from '$lib/types/notification';
 import type {
 	CreateTicketPayload,
 	PaginatedResponse,
@@ -229,6 +230,21 @@ export class ApiClient {
 
 	async listHistory(ticketId: string): Promise<TicketHistoryEntry[]> {
 		return this.request<TicketHistoryEntry[]>(`/tickets/${ticketId}/history/`);
+	}
+
+	async listNotifications(params: { page?: number; is_read?: boolean } = {}): Promise<PaginatedResponse<Notification>> {
+		const qs = this.toQueryString(params as Record<string, string | number | undefined>);
+		return this.request<PaginatedResponse<Notification>>(`/notifications/${qs}`);
+	}
+
+	async getNotification(id: string): Promise<Notification> {
+		return this.request<Notification>(`/notifications/${id}/`);
+	}
+
+	async markAsRead(id: string): Promise<Notification> {
+		return this.request<Notification>(`/notifications/${id}/read/`, {
+			method: 'PATCH'
+		});
 	}
 }
 

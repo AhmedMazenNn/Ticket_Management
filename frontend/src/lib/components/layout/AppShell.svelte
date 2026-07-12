@@ -1,9 +1,13 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
 	import type { Snippet } from 'svelte';
 	import { page } from '$app/state';
 	import { api } from '$lib/api/client';
 	import { auth } from '$lib/stores/auth.svelte';
+	import { notifications } from '$lib/stores/notification.svelte';
 	import { goto } from '$app/navigation';
+	import type { Notification } from '$lib/types/notification';
+	import { NOTIFICATION_LABELS } from '$lib/types/notification';
 
 	let {
 		title,
@@ -19,6 +23,9 @@
 
 	let sidebarOpen = $state(false);
 	let mobileOpen = $state(false);
+	let bellOpen = $state(false);
+	let recentNotifications = $state<Notification[]>([]);
+	let loadingRecent = $state(false);
 
 	const pathname: string = $derived(page.url.pathname);
 	const userInitials = $derived(
@@ -28,11 +35,83 @@
 			: '?'
 	);
 
+	onMount(() => {
+		notifications.startPolling(30000);
+		loadRecent();
+		return () => notifications.stopPolling();
+	});
+
 	function closeMobile() {
 		mobileOpen = false;
 	}
 
+	function closeBell() {
+		bellOpen = false;
+	}
+
+	async function loadRecent() {
+		loadingRecent = true;
+		try {
+			const res = await api.listNotifications({ page: 1 });
+			recentNotifications = res.results.slice(0, 10);
+		} catch {
+			// silently ignore
+		} finally {
+			loadingRecent = false;
+		}
+	}
+
+	async function toggleBell() {
+		bellOpen = !bellOpen;
+		if (bellOpen && recentNotifications.length === 0) {
+			await loadRecent();
+		}
+	}
+
+	async function handleMarkAsRead(notification: Notification) {
+		if (!notification.is_read) {
+			try {
+				await api.markAsRead(notification.id);
+				notifications.fetchCount();
+				recentNotifications = recentNotifications.map((n) =>
+					n.id === notification.id ? { ...n, is_read: true } : n
+				);
+			} catch {
+				// silently ignore
+			}
+		}
+		goto(`/tickets/${notification.ticket.id}`);
+		closeBell();
+	}
+
+	async function handleMarkAllRead() {
+		const unread = recentNotifications.filter((n) => !n.is_read);
+		for (const n of unread) {
+			try {
+				await api.markAsRead(n.id);
+			} catch {
+				// silently ignore individual failures
+			}
+		}
+		recentNotifications = recentNotifications.map((n) => ({ ...n, is_read: true }));
+		notifications.fetchCount();
+	}
+
+	function timeAgo(dateStr: string): string {
+		const now = Date.now();
+		const then = new Date(dateStr).getTime();
+		const diffMs = now - then;
+		const diffMin = Math.floor(diffMs / 60000);
+		if (diffMin < 1) return 'Just now';
+		if (diffMin < 60) return `${diffMin}m ago`;
+		const diffHr = Math.floor(diffMin / 60);
+		if (diffHr < 24) return `${diffHr}h ago`;
+		const diffDay = Math.floor(diffHr / 24);
+		return `${diffDay}d ago`;
+	}
+
 	async function handleLogout() {
+		notifications.clear();
 		await api.logout();
 		goto('/login');
 	}
@@ -139,6 +218,33 @@
 				{/if}
 			</a>
 			<a
+				href="/notifications"
+				onclick={closeMobile}
+				class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors
+					{pathname === '/notifications'
+					? 'bg-blue-50 text-blue-700'
+					: 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'}"
+			>
+				<svg
+					class="h-5 w-5 shrink-0"
+					viewBox="0 0 24 24"
+					fill="none"
+					stroke="currentColor"
+					stroke-width="1.5"
+				>
+					<path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9" />
+					<path d="M13.73 21a2 2 0 01-3.46 0" />
+				</svg>
+				{#if sidebarOpen || mobileOpen}
+					Notifications
+					{#if notifications.unreadCount > 0}
+						<span class="ml-auto inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white">
+							{notifications.unreadCount > 99 ? '99+' : notifications.unreadCount}
+						</span>
+					{/if}
+				{/if}
+			</a>
+			<a
 				href="/profile"
 				onclick={closeMobile}
 				class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors
@@ -235,6 +341,83 @@
 				<h1 class="truncate text-lg font-bold tracking-tight text-slate-950 sm:text-xl">{title}</h1>
 				{#if subtitle}
 					<p class="mt-0.5 hidden text-sm text-slate-500 sm:block">{subtitle}</p>
+				{/if}
+			</div>
+			<div class="relative shrink-0">
+				<button
+					type="button"
+					onclick={toggleBell}
+					class="relative rounded-lg p-2 text-slate-500 hover:bg-slate-100 hover:text-slate-700"
+					aria-label="Notifications"
+				>
+					<svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+						<path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9" />
+						<path d="M13.73 21a2 2 0 01-3.46 0" />
+					</svg>
+					{#if notifications.unreadCount > 0}
+						<span class="absolute -top-0.5 -right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white">
+							{notifications.unreadCount > 99 ? '99+' : notifications.unreadCount}
+						</span>
+					{/if}
+				</button>
+				{#if bellOpen}
+					<button
+						type="button"
+						class="fixed inset-0 z-40"
+						onclick={closeBell}
+						aria-label="Close notifications"
+					></button>
+					<div class="absolute right-0 top-full z-50 mt-2 w-80 rounded-xl border border-slate-200 bg-white shadow-xl">
+						<div class="flex items-center justify-between border-b border-slate-100 px-4 py-3">
+							<h3 class="text-sm font-semibold text-slate-900">Notifications</h3>
+							{#if recentNotifications.some((n) => !n.is_read)}
+								<button
+									type="button"
+									onclick={handleMarkAllRead}
+									class="text-xs font-medium text-blue-600 hover:text-blue-800"
+								>
+									Mark all read
+								</button>
+							{/if}
+						</div>
+						<div class="max-h-80 overflow-y-auto">
+							{#if loadingRecent}
+								<div class="flex items-center justify-center py-8">
+									<svg class="h-5 w-5 animate-spin text-slate-400" viewBox="0 0 24 24" fill="none">
+										<circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+										<path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+									</svg>
+								</div>
+							{:else if recentNotifications.length === 0}
+								<p class="py-8 text-center text-sm text-slate-500">No notifications yet</p>
+							{:else}
+								{#each recentNotifications as notification}
+									<button
+										type="button"
+										onclick={() => handleMarkAsRead(notification)}
+										class="flex w-full items-start gap-3 px-4 py-3 text-left transition-colors hover:bg-slate-50
+											{notification.is_read ? '' : 'bg-blue-50/50'}"
+									>
+										<span class="mt-0.5 h-2 w-2 shrink-0 rounded-full {notification.is_read ? 'bg-transparent' : 'bg-blue-500'}"></span>
+										<div class="min-w-0 flex-1">
+											<p class="text-sm font-medium text-slate-900">{NOTIFICATION_LABELS[notification.type]}</p>
+											<p class="mt-0.5 truncate text-xs text-slate-500">{notification.ticket.title}</p>
+											<p class="mt-1 text-xs text-slate-400">{timeAgo(notification.created_at)}</p>
+										</div>
+									</button>
+								{/each}
+							{/if}
+						</div>
+						<div class="border-t border-slate-100 px-4 py-2.5">
+							<a
+								href="/notifications"
+								onclick={closeBell}
+								class="block text-center text-xs font-medium text-blue-600 hover:text-blue-800"
+							>
+								View all notifications
+							</a>
+						</div>
+					</div>
 				{/if}
 			</div>
 			{#if action}
