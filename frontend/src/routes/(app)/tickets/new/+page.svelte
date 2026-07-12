@@ -1,10 +1,12 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { api } from '$lib/api/client';
+	import { parseApiError } from '$lib/api/errors';
 	import { auth } from '$lib/stores/auth.svelte';
 	import AppShell from '$lib/components/layout/AppShell.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 	import Card from '$lib/components/ui/Card.svelte';
+	import FieldError from '$lib/components/ui/FieldError.svelte';
 	import { TICKET_PRIORITIES, TICKET_STATUSES } from '$lib/constants';
 	import type { User } from '$lib/types/user';
 
@@ -13,6 +15,7 @@
 	let users = $derived(data.users);
 	let loading = $state(false);
 	let error = $state('');
+	let fieldErrors = $state<Record<string, string>>({});
 
 	let title = $state('');
 	let description = $state('');
@@ -30,12 +33,13 @@
 
 	async function handleSubmit(e: Event) {
 		e.preventDefault();
-		if (!title.trim()) {
-			error = 'Title is required.';
-			return;
-		}
-		loading = true;
 		error = '';
+		fieldErrors = {};
+
+		if (!title.trim()) fieldErrors.title = 'Title is required.';
+		if (Object.keys(fieldErrors).length > 0) return;
+
+		loading = true;
 		try {
 			const ticket = await api.createTicket({
 				title: title.trim(),
@@ -45,17 +49,17 @@
 				assigned_to: assignedTo || null
 			});
 			goto(`/tickets/${ticket.id}`);
-		} catch (e: any) {
-			error = e.detail || 'Failed to create ticket. Please try again.';
+		} catch (err) {
+			const parsed = parseApiError(err);
+			error = parsed.message;
+			fieldErrors = parsed.fields;
+		} finally {
 			loading = false;
 		}
 	}
 </script>
 
-<AppShell
-	title="Create ticket"
-	subtitle="Capture the right context so your team can move quickly."
->
+<AppShell title="Create ticket" subtitle="Capture the right context so your team can move quickly.">
 	{#snippet action()}
 		<a
 			href="/tickets"
@@ -90,14 +94,15 @@
 						bind:value={title}
 						required
 						placeholder="Briefly describe the issue or request"
-						class="block w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm outline-none placeholder:text-slate-400 focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+						class="block w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm outline-none placeholder:text-slate-400 focus:border-blue-400 focus:ring-2 focus:ring-blue-100 {fieldErrors.title
+							? 'border-rose-300'
+							: ''}"
 					/>
+					<FieldError error={fieldErrors.title} />
 				</label>
 
 				<label class="block">
-					<span class="mb-1.5 block text-sm font-semibold text-slate-700">
-						Description
-					</span>
+					<span class="mb-1.5 block text-sm font-semibold text-slate-700"> Description </span>
 					<span class="mt-1.5 mb-1.5 block text-xs leading-5 text-slate-400">
 						Include relevant context, expected outcome, and any useful links.
 					</span>
@@ -159,7 +164,13 @@
 					</a>
 					<Button type="submit" {loading}>
 						{#if !loading}
-							<svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+							<svg
+								class="h-4 w-4"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								stroke-width="2"
+							>
 								<path d="M20 6L9 17l-5-5" />
 							</svg>
 						{/if}
