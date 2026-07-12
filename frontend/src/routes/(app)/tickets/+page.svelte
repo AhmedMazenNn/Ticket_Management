@@ -106,56 +106,27 @@
 </script>
 
 <AppShell title="Tickets" subtitle="Track, prioritize, and resolve work across your organization.">
-	<Card className="overflow-hidden">
-		<div
-			class="flex flex-col gap-3 border-b border-slate-200 p-4 lg:flex-row lg:items-center lg:justify-between"
-		>
+	<Card className="overflow-hidden shadow-sm">
+		<div class="flex flex-col gap-3 border-b border-surface-200 p-4 lg:flex-row lg:items-center lg:justify-between">
 			<div class="relative min-w-0 flex-1 lg:max-w-sm">
-				<svg
-					class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"
-					viewBox="0 0 24 24"
-					fill="none"
-					stroke="currentColor"
-					stroke-width="2"
-				>
+				<svg class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-surface-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
 					<circle cx="11" cy="11" r="8" />
 					<path d="M21 21l-4.35-4.35" />
 				</svg>
 				<input
 					value={search}
 					oninput={handleSearch}
-					class="h-10 w-full rounded-lg border border-slate-200 bg-slate-50 pl-9 pr-3 text-sm outline-none placeholder:text-slate-400 focus:border-blue-400 focus:bg-white focus:ring-2 focus:ring-blue-100"
+					class="h-10 w-full rounded-lg border border-surface-200 bg-surface-50 pl-9 pr-3 text-sm outline-none placeholder:text-surface-400 focus:border-primary-400 focus:bg-white focus:ring-2 focus:ring-primary-100 transition-colors"
 					placeholder="Search by title..."
 				/>
 			</div>
 			<div class="flex flex-wrap gap-2">
-				<Select
-					label="Status"
-					value={statusFilter}
-					options={statusOptions}
-					onchange={(v) => updateParam('status', v)}
-				/>
-				<Select
-					label="Priority"
-					value={priorityFilter}
-					options={priorityOptions}
-					onchange={(v) => updateParam('priority', v)}
-				/>
-				<Select
-					label="Assignee"
-					value={assigneeFilter}
-					options={assigneeOptions}
-					onchange={(v) => updateParam('assigned_to', v)}
-				/>
+				<Select label="Status" value={statusFilter} options={statusOptions} onchange={(v) => updateParam('status', v)} />
+				<Select label="Priority" value={priorityFilter} options={priorityOptions} onchange={(v) => updateParam('priority', v)} />
+				<Select label="Assignee" value={assigneeFilter} options={assigneeOptions} onchange={(v) => updateParam('assigned_to', v)} />
 				<a href="/tickets/new">
 					<Button>
-						<svg
-							class="h-4 w-4"
-							viewBox="0 0 24 24"
-							fill="none"
-							stroke="currentColor"
-							stroke-width="2"
-						>
+						<svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
 							<path d="M12 5v14M5 12h14" />
 						</svg>
 						Create ticket
@@ -165,17 +136,17 @@
 		</div>
 
 		{#if deleteError}
-			<div class="mx-4 mt-4 rounded-lg bg-rose-50 px-4 py-3 text-sm text-rose-700">
+			<div class="mx-4 mt-4 rounded-lg bg-rose-50 border border-rose-200 px-4 py-3 text-sm text-rose-700">
 				{deleteError}
 			</div>
 		{/if}
 
 		{#if tickets.length === 0}
-			<div class="px-6 py-16 text-center text-sm text-slate-400">No tickets found.</div>
+			<div class="px-6 py-16 text-center text-sm text-surface-400">No tickets found.</div>
 		{:else}
 			<div class="overflow-x-auto">
 				<table class="min-w-[800px] w-full text-left">
-					<thead class="bg-slate-50 text-xs font-semibold text-slate-500">
+					<thead class="bg-surface-50 text-xs font-semibold text-surface-500">
 						<tr>
 							<th class="whitespace-nowrap px-5 py-3.5">ID</th>
 							<th class="whitespace-nowrap px-5 py-3.5">Title</th>
@@ -187,17 +158,14 @@
 							<th class="px-5 py-3.5"></th>
 						</tr>
 					</thead>
-					<tbody class="divide-y divide-slate-100">
+					<tbody class="divide-y divide-surface-100">
 						{#each tickets as ticket (ticket.id)}
-							<tr class="group hover:bg-slate-50">
-								<td class="px-5 py-4 text-xs font-semibold text-blue-600">
+							<tr class="group hover:bg-surface-50 transition-colors">
+								<td class="px-5 py-4 text-xs font-semibold text-primary-600">
 									{ticket.id.slice(0, 8)}
 								</td>
 								<td class="max-w-[300px] px-5 py-4">
-									<a
-										href="/tickets/{ticket.id}"
-										class="block max-w-full truncate text-sm font-semibold text-slate-700 hover:text-blue-600"
-									>
+									<a href="/tickets/{ticket.id}" class="block max-w-full truncate text-sm font-semibold text-surface-700 hover:text-primary-600 transition-colors">
 										{ticket.title}
 									</a>
 								</td>
@@ -209,54 +177,37 @@
 								</td>
 								<td class="px-5 py-4">
 									{#if ticket.assigned_to}
-										<span class="flex items-center gap-2 whitespace-nowrap text-sm text-slate-600">
+										<span class="flex items-center gap-2 whitespace-nowrap text-sm text-surface-600">
 											<Avatar initials={getUserInitials(ticket.assigned_to)} size="sm" />
 											{ticket.assigned_to.first_name}
 											{ticket.assigned_to.last_name}
 										</span>
 									{:else}
-										<span class="text-xs text-slate-400">Unassigned</span>
+										<span class="text-xs text-surface-400">Unassigned</span>
 									{/if}
 								</td>
-								<td class="whitespace-nowrap px-5 py-4 text-sm text-slate-500">
+								<td class="whitespace-nowrap px-5 py-4 text-sm text-surface-500">
 									{formatDate(ticket.created_at)}
 								</td>
-								<td class="whitespace-nowrap px-5 py-4 text-sm text-slate-500">
+								<td class="whitespace-nowrap px-5 py-4 text-sm text-surface-500">
 									{formatDate(ticket.updated_at)}
 								</td>
 								<td class="px-5 py-4">
 									<div class="flex items-center gap-1">
-										<a
-											href="/tickets/{ticket.id}"
-											class="rounded-lg px-2.5 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-100"
-										>
+										<a href="/tickets/{ticket.id}" class="rounded-lg px-2.5 py-1.5 text-xs font-semibold text-surface-600 hover:bg-surface-100 transition-colors">
 											View
 										</a>
-										<a
-											href="/tickets/{ticket.id}/edit"
-											class="rounded-lg px-2.5 py-1.5 text-xs font-semibold text-blue-600 hover:bg-blue-50"
-										>
+										<a href="/tickets/{ticket.id}/edit" class="rounded-lg px-2.5 py-1.5 text-xs font-semibold text-primary-600 hover:bg-primary-50 transition-colors">
 											Edit
 										</a>
 										<button
 											type="button"
-											onclick={() => {
-												deleteTicket = ticket;
-												deleteError = '';
-											}}
-											class="rounded-lg p-1.5 text-slate-400 hover:bg-rose-50 hover:text-rose-600"
+											onclick={() => { deleteTicket = ticket; deleteError = ''; }}
+											class="rounded-lg p-1.5 text-surface-400 hover:bg-rose-50 hover:text-rose-600 transition-colors"
 											aria-label="Delete ticket"
 										>
-											<svg
-												class="h-4 w-4"
-												viewBox="0 0 24 24"
-												fill="none"
-												stroke="currentColor"
-												stroke-width="1.5"
-											>
-												<path
-													d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"
-												/>
+											<svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+												<path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2" />
 												<line x1="10" y1="11" x2="10" y2="17" />
 												<line x1="14" y1="11" x2="14" y2="17" />
 											</svg>
@@ -270,12 +221,9 @@
 			</div>
 		{/if}
 
-		<div
-			class="flex flex-col gap-3 border-t border-slate-200 px-5 py-4 text-sm text-slate-500 sm:flex-row sm:items-center sm:justify-between"
-		>
+		<div class="flex flex-col gap-3 border-t border-surface-200 px-5 py-4 text-sm text-surface-500 sm:flex-row sm:items-center sm:justify-between">
 			<span>
-				Showing <b class="text-slate-700">{tickets.length}</b> of {count}
-				tickets
+				Showing <b class="text-surface-700">{tickets.length}</b> of {count} tickets
 			</span>
 			<Pagination current={currentPage} total={count} onchange={handlePageChange} />
 		</div>

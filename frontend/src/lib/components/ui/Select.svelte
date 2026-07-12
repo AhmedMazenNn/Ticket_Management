@@ -20,7 +20,7 @@
 <label class="relative">
 	<span class="sr-only">{label}</span>
 	<svg
-		class="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400"
+		class="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-surface-400"
 		viewBox="0 0 24 24"
 		fill="none"
 		stroke="currentColor"
@@ -31,7 +31,7 @@
 	<select
 		{value}
 		onchange={handleChange}
-		class="h-10 appearance-none rounded-lg border border-slate-200 bg-white pl-7 pr-7 text-xs font-medium text-slate-600 outline-none hover:bg-slate-50 focus:border-blue-400"
+		class="h-10 appearance-none rounded-lg border border-surface-200 bg-white pl-7 pr-7 text-xs font-medium text-surface-600 outline-none hover:bg-surface-50 focus:border-primary-400 focus:ring-2 focus:ring-primary-100 transition-colors"
 	>
 		{#each options as option (option.value)}
 			<option value={option.value}>{option.label}</option>
