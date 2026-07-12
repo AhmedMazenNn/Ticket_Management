@@ -12,6 +12,11 @@ class Notification(models.Model):
         TICKET_UPDATED = "TICKET_UPDATED", "Ticket Updated"
         COMMENT_ADDED = "COMMENT_ADDED", "Comment Added"
 
+    class Status(models.TextChoices):
+        PENDING = "PENDING", "Pending"
+        SENT = "SENT", "Sent"
+        FAILED = "FAILED", "Failed"
+
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     ticket = models.ForeignKey(
         "tickets.Ticket",
@@ -24,7 +29,11 @@ class Notification(models.Model):
         related_name="notifications",
     )
     type = models.CharField(max_length=30, choices=Type.choices)
+    status = models.CharField(
+        max_length=10, choices=Status.choices, default=Status.PENDING,
+    )
     is_read = models.BooleanField(default=False)
+    sent_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -33,6 +42,7 @@ class Notification(models.Model):
             models.Index(fields=["ticket"]),
             models.Index(fields=["user"]),
             models.Index(fields=["is_read"]),
+            models.Index(fields=["status"]),
             models.Index(fields=["created_at"]),
         ]
 

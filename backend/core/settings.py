@@ -56,10 +56,6 @@ THIRD_PARTY_APPS = [
     "drf_spectacular",
     # CORS
     "corsheaders",
-    # Celery integrations
-    "django_celery_beat",
-    "django_celery_results",
-    "djcelery_email",
 ]
 
 # Apps are registered here as they are created during development.
@@ -212,16 +208,17 @@ SPECTACULAR_SETTINGS = {
 }
 
 # ---------------------------------------------------------------------------
-# Celery — RabbitMQ broker + Redis result backend
+# Celery — Redis broker + result backend
 # ---------------------------------------------------------------------------
 
-CELERY_BROKER_URL = config("CELERY_BROKER_URL", default="amqp://guest:guest@localhost:5672//")
+CELERY_BROKER_URL = config("CELERY_BROKER_URL", default="redis://localhost:6379/0")
 CELERY_RESULT_BACKEND = config("CELERY_RESULT_BACKEND", default="redis://localhost:6379/0")
 CELERY_ACCEPT_CONTENT = ["json"]
+CELERY_TASK_ALWAYS_EAGER = config("CELERY_TASK_ALWAYS_EAGER", default=False, cast=bool)
+CELERY_TASK_EAGER_PROPAGATES = config("CELERY_TASK_EAGER_PROPAGATES", default=False, cast=bool)
 CELERY_TASK_SERIALIZER = "json"
 CELERY_RESULT_SERIALIZER = "json"
 CELERY_TIMEZONE = TIME_ZONE
-CELERY_BEAT_SCHEDULER = "django_celery_beat.schedulers:DatabaseScheduler"
 CELERY_TASK_TRACK_STARTED = True
 CELERY_TASK_TIME_LIMIT = 30 * 60  # 30 minutes hard limit
 
@@ -240,14 +237,10 @@ CACHES = {
 }
 
 # ---------------------------------------------------------------------------
-# Email (dispatched via Celery)
+# Email
 # ---------------------------------------------------------------------------
 
-EMAIL_BACKEND = "djcelery_email.backends.CeleryEmailBackend"
-CELERY_EMAIL_BACKEND = config(
-    "CELERY_EMAIL_BACKEND",
-    default="django.core.mail.backends.console.EmailBackend",
-)
+EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 DEFAULT_FROM_EMAIL = config("DEFAULT_FROM_EMAIL", default="noreply@ticketapp.local")
 
 EMAIL_HOST = config("EMAIL_HOST", default="localhost")
