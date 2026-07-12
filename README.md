@@ -22,6 +22,7 @@ This application allows teams to manage support tickets through a role-based sys
 | Database | PostgreSQL 16 | Primary data store |
 | Cache | Redis 7 | Caching layer + Celery result backend |
 | Broker | Redis 7 | Celery task queue broker |
+| Event bus | RabbitMQ 3.13 | Application event publishing |
 | Background tasks | Celery 5 | Async email notifications |
 | Containers | Docker + Docker Compose | Development environment |
 | Testing | pytest + factory-boy + pytest-cov | Backend testing |
@@ -493,11 +494,144 @@ Tests verify:
 
 ---
 
+## RabbitMQ — Event Bus
+
+RabbitMQ is used as an application event bus, separate from Celery (which uses Redis). When important actions occur (ticket created, updated, assigned, etc.), the backend publishes a message to RabbitMQ.
+
+### Architecture
+
+```
+Ticket/Comment service
+        ↓
+publish_event(routing_key, payload)
+        ↓
+RabbitMQ exchange "ticket_events" (topic)
+        ↓
+Consumers receive events by routing key
+```
+
+### Events Published
+
+| Routing Key | Trigger | Payload |
+|---|---|---|
+| `ticket.created` | New ticket created | `event`, `ticket_id`, `title`, `created_by`, `timestamp` |
+| `ticket.updated` | Title/description changed | `event`, `ticket_id`, `changed_by`, `changes[]`, `timestamp` |
+| `ticket.assigned` | Ticket assigned/unassigned | `event`, `ticket_id`, `changed_by`, `assigned_to`, `timestamp` |
+| `ticket.status_changed` | Status changed | `event`, `ticket_id`, `changed_by`, `changes[]`, `timestamp` |
+| `ticket.priority_changed` | Priority changed | `event`, `ticket_id`, `changed_by`, `changes[]`, `timestamp` |
+| `comment.created` | New comment added | `event`, `comment_id`, `ticket_id`, `author`, `timestamp` |
+
+### Example Payload
+
+```json
+{
+    "event": "ticket.assigned",
+    "ticket_id": "550e8400-e29b-41d4-a716-446655440000",
+    "changed_by": "user-id-here",
+    "assigned_to": "agent-id-here",
+    "timestamp": "2026-07-12T21:00:00+00:00"
+}
+```
+
+### Starting RabbitMQ
+
+With Docker:
+
+```bash
+docker compose up -d rabbitmq
+```
+
+With Podman:
+
+```bash
+podman run -d --name rabbitmq -p 5672:5672 -p 15672:15672 \
+  -e RABBITMQ_DEFAULT_USER=guest \
+  -e RABBITMQ_DEFAULT_PASS=guest \
+  docker.io/library/rabbitmq:3.13-management-alpine
+```
+
+### Management UI
+
+| URL | Credentials |
+|---|---|
+| http://localhost:15672 | guest / guest |
+
+From the Management UI you can:
+- View the `ticket_events` exchange and its bindings
+- Monitor message rates and queue depth
+- Inspect individual messages
+
+### Running the Consumer (for debugging)
+
+```bash
+cd backend
+source .venv/bin/activate
+python -m apps.messaging.consumer
+```
+
+This subscribes to all routing keys and logs received events. Output example:
+
+```
+INFO: Received ticket.assigned
+INFO:   event: ticket.assigned
+INFO:   ticket_id: 550e8400-...
+INFO:   assigned_to: agent-id-...
+```
+
+Press `Ctrl+C` to stop.
+
+### Environment Variables
+
+Configure in `backend/.env`:
+
+```env
+RABBITMQ_HOST=localhost
+RABBITMQ_PORT=5672
+RABBITMQ_USERNAME=guest
+RABBITMQ_PASSWORD=guest
+RABBITMQ_VHOST=/
+```
+
+### Testing
+
+Run messaging-specific tests:
+
+```bash
+cd backend
+pytest apps/messaging/tests.py -v
+```
+
+Tests verify:
+- Publisher serializes JSON correctly (UUIDs, datetimes)
+- Publisher connects and publishes to the exchange
+- Publishing failures are logged, never crash the request
+- Ticket creation, update, assignment, and status/priority changes all publish events
+- Comment creation publishes events
+- Consumer callback parses JSON and handles invalid input
+
+All tests mock RabbitMQ — no running server required.
+
+### Project Structure (messaging app)
+
+```
+apps/messaging/
+├── __init__.py
+├── apps.py           # Django AppConfig
+├── constants.py      # Exchange name, routing keys
+├── connection.py     # RabbitMQ connection manager
+├── publisher.py      # publish_event(routing_key, payload)
+├── consumer.py       # Simple consumer for debugging
+└── tests.py          # 12 unit tests (mocked RabbitMQ)
+```
+
+---
+
 ## Assumptions & Notes
 
 - JWT is used for API authentication.
 - Google OAuth is planned via `django-allauth` (not yet implemented).
 - Redis serves as Celery broker/result backend and Django cache (DB 0 for Celery, DB 1 for cache).
+- RabbitMQ serves as the application event bus for business events (separate from Celery).
 - Email is sent via Gmail SMTP (configured in `.env`).
 - Celery tasks auto-retry on failure with exponential backoff (3 attempts).
 - Notification status tracks email delivery: PENDING → SENT / FAILED.
