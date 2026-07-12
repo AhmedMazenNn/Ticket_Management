@@ -47,7 +47,11 @@ export class ApiClient {
 			});
 			if (!res.ok) throw { status: res.status };
 			const data: RefreshResponse = await res.json();
-			auth.setAccessToken(data.access);
+			if (data.refresh) {
+				auth.setTokens(data.access, data.refresh);
+			} else {
+				auth.setAccessToken(data.access);
+			}
 			return data.access;
 		})();
 		try {
@@ -232,7 +236,9 @@ export class ApiClient {
 		return this.request<TicketHistoryEntry[]>(`/tickets/${ticketId}/history/`);
 	}
 
-	async listNotifications(params: { page?: number; is_read?: boolean } = {}): Promise<PaginatedResponse<Notification>> {
+	async listNotifications(
+		params: { page?: number; is_read?: boolean } = {}
+	): Promise<PaginatedResponse<Notification>> {
 		const qs = this.toQueryString(params as Record<string, string | number | undefined>);
 		return this.request<PaginatedResponse<Notification>>(`/notifications/${qs}`);
 	}
