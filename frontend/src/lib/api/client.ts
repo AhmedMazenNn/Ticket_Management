@@ -7,6 +7,7 @@ import type {
 	RegisterPayload
 } from '$lib/types/auth';
 import type { Comment, CreateCommentPayload, UpdateCommentPayload } from '$lib/types/comment';
+import type { TicketHistoryEntry } from '$lib/types/history';
 import type {
 	CreateTicketPayload,
 	PaginatedResponse,
@@ -224,6 +225,10 @@ export class ApiClient {
 
 	async deleteComment(commentId: string): Promise<void> {
 		await this.request<void>(`/comments/${commentId}/`, { method: 'DELETE' });
+	}
+
+	async listHistory(ticketId: string): Promise<TicketHistoryEntry[]> {
+		return this.request<TicketHistoryEntry[]>(`/tickets/${ticketId}/history/`);
 	}
 }
 

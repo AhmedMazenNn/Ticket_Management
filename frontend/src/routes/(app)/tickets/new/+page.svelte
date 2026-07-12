@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { api } from '$lib/api/client';
+	import { auth } from '$lib/stores/auth.svelte';
 	import AppShell from '$lib/components/layout/AppShell.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 	import Card from '$lib/components/ui/Card.svelte';
@@ -18,6 +19,14 @@
 	let priority = $state('MEDIUM');
 	let status = $state('OPEN');
 	let assignedTo = $state('');
+
+	let assignableUsers = $derived(
+		users.filter((u: User) => {
+			if (u.role === 'AGENT') return true;
+			if (auth.user && u.id === auth.user.id) return true;
+			return false;
+		})
+	);
 
 	async function handleSubmit(e: Event) {
 		e.preventDefault();
@@ -132,7 +141,7 @@
 							class="block w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
 						>
 							<option value="">Unassigned</option>
-							{#each users as user (user.id)}
+							{#each assignableUsers as user (user.id)}
 								<option value={user.id}>
 									{user.first_name ? `${user.first_name} ${user.last_name}` : user.email}
 								</option>
