@@ -7,6 +7,7 @@
 	import Badge from '$lib/components/ui/Badge.svelte';
 	import Card from '$lib/components/ui/Card.svelte';
 	import type { Comment } from '$lib/types/comment';
+	import type { TicketHistoryEntry } from '$lib/types/history';
 
 	let { data } = $props();
 
@@ -17,6 +18,8 @@
 	let editingId = $state<string | null>(null);
 	let editBody = $state('');
 	let loadingComments = $state(true);
+	let historyItems = $state<TicketHistoryEntry[]>([]);
+	let loadingHistory = $state(true);
 
 	function getUserInitials(user: { first_name: string; last_name: string; email: string }): string {
 		return (
@@ -54,6 +57,24 @@
 		return formatDate(iso);
 	}
 
+	const FIELD_LABELS: Record<string, string> = {
+		created: 'Ticket created',
+		title: 'Title',
+		description: 'Description',
+		priority: 'Priority',
+		status: 'Status',
+		assigned_to: 'Assignee'
+	};
+
+	const FIELD_ICONS: Record<string, string> = {
+		created: 'M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6',
+		title: 'M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z',
+		description: 'M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z M14 2v6h6 M16 13H8 M16 17H8 M10 9H8',
+		priority: 'M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z M7 7h.01',
+		status: 'M20 6L9 17l-5-5',
+		assigned_to: 'M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2 M12 11a4 4 0 100-8 4 4 0 000 8z'
+	};
+
 	async function loadComments() {
 		try {
 			comments = await api.listComments(ticket.id);
@@ -61,6 +82,16 @@
 			// silently fail
 		} finally {
 			loadingComments = false;
+		}
+	}
+
+	async function loadHistory() {
+		try {
+			historyItems = await api.listHistory(ticket.id);
+		} catch {
+			// silently fail
+		} finally {
+			loadingHistory = false;
 		}
 	}
 
@@ -110,6 +141,7 @@
 
 	onMount(() => {
 		loadComments();
+		loadHistory();
 	});
 </script>
 
@@ -470,9 +502,103 @@
 			<Card>
 				<div class="border-b border-slate-100 px-5 py-4">
 					<h2 class="text-sm font-semibold">Activity</h2>
-					<p class="mt-0.5 text-xs text-slate-500">Coming soon</p>
+					<p class="mt-0.5 text-xs text-slate-500">
+						{historyItems.length}
+						{historyItems.length === 1 ? 'event' : 'events'}
+					</p>
 				</div>
-				<div class="px-5 py-10 text-center text-sm text-slate-400">Activity log coming soon.</div>
+				<div class="p-5">
+					{#if loadingHistory}
+						<div class="py-8 text-center text-sm text-slate-400">
+							<svg
+								class="mx-auto h-5 w-5 animate-spin text-slate-300"
+								viewBox="0 0 24 24"
+								fill="none"
+							>
+								<circle
+									class="opacity-25"
+									cx="12"
+									cy="12"
+									r="10"
+									stroke="currentColor"
+									stroke-width="4"
+								/>
+								<path
+									class="opacity-75"
+									fill="currentColor"
+									d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+								/>
+							</svg>
+							<p class="mt-2">Loading activity...</p>
+						</div>
+					{:else if historyItems.length === 0}
+						<div class="py-8 text-center">
+							<svg
+								class="mx-auto h-8 w-8 text-slate-300"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								stroke-width="1.5"
+							>
+								<path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+							</svg>
+							<p class="mt-2 text-sm font-medium text-slate-500">No activity yet</p>
+							<p class="mt-1 text-xs text-slate-400">Changes will appear here.</p>
+						</div>
+					{:else}
+						<div class="relative">
+							<div class="absolute left-4 top-0 bottom-0 w-px bg-slate-100"></div>
+							<div class="space-y-4">
+								{#each historyItems as entry (entry.id)}
+									<div class="relative flex gap-3">
+										<div class="relative z-10 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white ring-2 ring-slate-100">
+											<svg
+												class="h-3.5 w-3.5 text-slate-500"
+												viewBox="0 0 24 24"
+												fill="none"
+												stroke="currentColor"
+												stroke-width="2"
+												stroke-linecap="round"
+												stroke-linejoin="round"
+											>
+												<path d={FIELD_ICONS[entry.field_name] ?? FIELD_ICONS.created} />
+											</svg>
+										</div>
+										<div class="min-w-0 flex-1 pt-1">
+											<div class="flex items-center gap-2">
+												<span class="text-sm font-medium text-slate-700">
+													{entry.changed_by.first_name || entry.changed_by.email}
+													{entry.changed_by.last_name || ''}
+												</span>
+												<span
+													class="text-xs text-slate-400"
+													title={formatDateTime(entry.created_at)}
+												>
+													{timeAgo(entry.created_at)}
+												</span>
+											</div>
+											{#if entry.field_name === 'created'}
+												<p class="mt-1 text-sm text-slate-500">Created this ticket</p>
+											{:else}
+												<p class="mt-1 text-sm text-slate-500">
+													Changed <span class="font-medium text-slate-600">{FIELD_LABELS[entry.field_name] ?? entry.field_name}</span>
+													{#if entry.old_value && entry.new_value}
+														from <span class="font-medium text-slate-600">{entry.old_value}</span>
+														to <span class="font-medium text-slate-600">{entry.new_value}</span>
+													{:else if entry.new_value}
+														to <span class="font-medium text-slate-600">{entry.new_value}</span>
+													{:else}
+														<span class="font-medium text-slate-600">cleared</span>
+													{/if}
+												</p>
+											{/if}
+										</div>
+									</div>
+								{/each}
+							</div>
+						</div>
+					{/if}
+				</div>
 			</Card>
 		</aside>
 	</div>

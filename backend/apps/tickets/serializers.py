@@ -70,8 +70,11 @@ class TicketCreateSerializer(serializers.ModelSerializer):
             return value
         if not value.is_active:
             raise serializers.ValidationError("Cannot assign to an inactive user.")
+        request = self.context.get("request")
+        if request and request.user == value:
+            return value
         if value.role != User.Role.AGENT:
-            raise serializers.ValidationError("Only users with the AGENT role can be assigned.")
+            raise serializers.ValidationError("Only agents can be assigned to tickets.")
         return value
 
 
@@ -91,8 +94,11 @@ class TicketUpdateSerializer(serializers.ModelSerializer):
             return value
         if not value.is_active:
             raise serializers.ValidationError("Cannot assign to an inactive user.")
+        request = self.context.get("request")
+        if request and request.user == value:
+            return value
         if value.role != User.Role.AGENT:
-            raise serializers.ValidationError("Only users with the AGENT role can be assigned.")
+            raise serializers.ValidationError("Only agents can be assigned to tickets.")
         return value
 
 

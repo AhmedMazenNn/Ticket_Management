@@ -1,5 +1,6 @@
 from django.urls import path
 
+from apps.audit.views import TicketHistoryView
 from apps.comments.views import CommentListCreateView
 
 from .views import (
@@ -18,5 +19,10 @@ urlpatterns = [
         "<uuid:ticket_id>/comments/",
         CommentListCreateView.as_view(),
         name="ticket_comments",
+    ),
+    path(
+        "<uuid:ticket_id>/history/",
+        TicketHistoryView.as_view(),
+        name="ticket_history",
     ),
 ]

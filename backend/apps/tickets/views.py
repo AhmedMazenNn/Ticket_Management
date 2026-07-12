@@ -99,7 +99,7 @@ class TicketDetailView(generics.RetrieveUpdateDestroyAPIView):
         serializer = self.get_serializer(ticket, data=request.data, partial=partial)
         serializer.is_valid(raise_exception=True)
 
-        updated_ticket = update_ticket(ticket, **serializer.validated_data)
+        updated_ticket = update_ticket(ticket, changed_by=request.user, **serializer.validated_data)
 
         return Response(TicketDetailSerializer(updated_ticket).data)
 
