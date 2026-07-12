@@ -409,11 +409,95 @@ Notification.status → SENT (or FAILED on error)
 
 ---
 
+## Redis Caching
+
+Redis is used for three purposes in this project:
+
+| Purpose | Redis DB | Config |
+|---|---|---|
+| Celery broker | `0` | `CELERY_BROKER_URL` |
+| Celery result backend | `0` | `CELERY_RESULT_BACKEND` |
+| Django cache | `1` | `REDIS_URL` |
+
+### Cached Endpoints
+
+| Endpoint | Cache Key | Timeout | Description |
+|---|---|---|---|
+| `GET /api/tickets/dashboard_stats/` | `dashboard_stats` | 5 min | Aggregate ticket counts (total, open, in-progress, closed, priority breakdown) |
+| `GET /api/tickets/my_stats/` | `my_stats_{user_id}` | 5 min | Per-user assigned/created ticket stats |
+
+### How It Works
+
+```
+First request (cache miss):
+  GET /api/tickets/dashboard_stats/
+        ↓
+  Query database (7 aggregate queries)
+        ↓
+  Cache response in Redis (key: "dashboard_stats", TTL: 300s)
+        ↓
+  Return response
+
+Second request (cache hit):
+  GET /api/tickets/dashboard_stats/
+        ↓
+  Return cached response instantly (no DB queries)
+```
+
+### Cache Invalidation
+
+Cache is automatically invalidated when ticket data changes. Only affected keys are deleted — `cache.clear()` is never used.
+
+| Event | Keys Invalidated |
+|---|---|
+| Ticket created | `dashboard_stats`, `my_stats_{creator}`, `my_stats_{assignee}` |
+| Ticket updated | `dashboard_stats`, `my_stats_{creator}`, `my_stats_{assignee}` |
+| Ticket deleted | `dashboard_stats`, `my_stats_{creator}`, `my_stats_{assignee}` |
+| Assignment changed | `dashboard_stats`, `my_stats_{old_assignee}`, `my_stats_{new_assignee}` |
+
+If the creator and assignee are the same user, only one `my_stats_*` key is deleted.
+
+### Configuration
+
+The cache backend is configured in `settings.py`:
+
+```python
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.redis.RedisCache",
+        "LOCATION": config("REDIS_URL", default="redis://localhost:6379/1"),
+    }
+}
+```
+
+Set `REDIS_URL` in `backend/.env`:
+
+```env
+REDIS_URL=redis://localhost:6379/1
+```
+
+### Testing
+
+Run cache-specific tests:
+
+```bash
+cd backend
+pytest apps/tickets/tests.py::TestDashboardCache -v
+```
+
+Tests verify:
+- First request queries DB and populates cache
+- Second request returns cached data
+- Cache invalidates after ticket create, update, delete, and assignment changes
+- Each user gets their own `my_stats_*` cache entry
+
+---
+
 ## Assumptions & Notes
 
 - JWT is used for API authentication.
 - Google OAuth is planned via `django-allauth` (not yet implemented).
-- Redis serves as both the Celery broker and result backend.
+- Redis serves as Celery broker/result backend and Django cache (DB 0 for Celery, DB 1 for cache).
 - Email is sent via Gmail SMTP (configured in `.env`).
 - Celery tasks auto-retry on failure with exponential backoff (3 attempts).
 - Notification status tracks email delivery: PENDING → SENT / FAILED.

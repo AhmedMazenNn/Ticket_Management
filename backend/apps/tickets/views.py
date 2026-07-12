@@ -1,3 +1,4 @@
+from django.core.cache import cache
 from drf_spectacular.utils import extend_schema
 from rest_framework import generics, status
 from rest_framework.permissions import IsAuthenticated
@@ -19,6 +20,9 @@ from .serializers import (
     TicketUpdateSerializer,
 )
 from .services import create_ticket, delete_ticket, update_ticket
+
+DASHBOARD_STATS_KEY = "dashboard_stats"
+DASHBOARD_STATS_TIMEOUT = 300  # 5 minutes
 
 
 @extend_schema(tags=["Tickets"])
@@ -114,6 +118,10 @@ class DashboardStatsView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request: Request) -> Response:
+        cached = cache.get(DASHBOARD_STATS_KEY)
+        if cached:
+            return Response(cached)
+
         user = request.user
         if user.role == User.Role.AGENT:
             qs = Ticket.objects.filter(assigned_to=user)
@@ -127,20 +135,20 @@ class DashboardStatsView(APIView):
 
         recent = qs.select_related("assigned_to", "created_by").order_by("-created_at")[:5]
 
-        return Response(
-            {
-                "total": total,
-                "open": open_count,
-                "in_progress": in_progress,
-                "closed": closed,
-                "recent_tickets": TicketListSerializer(recent, many=True).data,
-                "priority_breakdown": {
-                    "low": qs.filter(priority=Ticket.Priority.LOW).count(),
-                    "medium": qs.filter(priority=Ticket.Priority.MEDIUM).count(),
-                    "high": qs.filter(priority=Ticket.Priority.HIGH).count(),
-                },
-            }
-        )
+        response_data = {
+            "total": total,
+            "open": open_count,
+            "in_progress": in_progress,
+            "closed": closed,
+            "recent_tickets": TicketListSerializer(recent, many=True).data,
+            "priority_breakdown": {
+                "low": qs.filter(priority=Ticket.Priority.LOW).count(),
+                "medium": qs.filter(priority=Ticket.Priority.MEDIUM).count(),
+                "high": qs.filter(priority=Ticket.Priority.HIGH).count(),
+            },
+        }
+        cache.set(DASHBOARD_STATS_KEY, response_data, timeout=DASHBOARD_STATS_TIMEOUT)
+        return Response(response_data)
 
 
 @extend_schema(tags=["Tickets"])
@@ -150,21 +158,24 @@ class MyStatsView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request: Request) -> Response:
+        cache_key = f"my_stats_{request.user.id}"
+        cached = cache.get(cache_key)
+        if cached:
+            return Response(cached)
+
         assigned = Ticket.objects.filter(assigned_to=request.user)
         created = Ticket.objects.filter(created_by=request.user)
 
-        return Response(
-            {
-                "assigned_total": assigned.count(),
-                "assigned_open": assigned.filter(status=Ticket.Status.OPEN).count(),
-                "assigned_in_progress": assigned.filter(status=Ticket.Status.IN_PROGRESS).count(),
-                "assigned_closed": assigned.filter(status=Ticket.Status.CLOSED).count(),
-                "created_total": created.count(),
-                "assigned_tickets": TicketListSerializer(
-                    assigned.select_related("assigned_to", "created_by").order_by(
-                        "-updated_at"
-                    )[:10],
-                    many=True,
-                ).data,
-            }
-        )
+        response_data = {
+            "assigned_total": assigned.count(),
+            "assigned_open": assigned.filter(status=Ticket.Status.OPEN).count(),
+            "assigned_in_progress": assigned.filter(status=Ticket.Status.IN_PROGRESS).count(),
+            "assigned_closed": assigned.filter(status=Ticket.Status.CLOSED).count(),
+            "created_total": created.count(),
+            "assigned_tickets": TicketListSerializer(
+                assigned.select_related("assigned_to", "created_by").order_by("-updated_at")[:10],
+                many=True,
+            ).data,
+        }
+        cache.set(cache_key, response_data, timeout=DASHBOARD_STATS_TIMEOUT)
+        return Response(response_data)

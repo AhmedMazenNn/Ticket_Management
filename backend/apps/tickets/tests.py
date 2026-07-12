@@ -166,7 +166,12 @@ class TestTicketRetrieve:
 class TestTicketUpdate:
     def test_manager_can_update_all_fields(self, manager_client, agent):
         ticket = TicketFactory()
-        data = {"title": "Updated", "priority": "LOW", "status": "IN_PROGRESS", "assigned_to": str(agent.id)}
+        data = {
+            "title": "Updated",
+            "priority": "LOW",
+            "status": "IN_PROGRESS",
+            "assigned_to": str(agent.id),
+        }
         response = manager_client.patch(f"/api/tickets/{ticket.id}/", data, format="json")
         assert response.status_code == status.HTTP_200_OK
         assert response.data["title"] == "Updated"
@@ -297,3 +302,139 @@ class TestTicketPermissions:
         ticket = TicketFactory()
         response = api_client.delete(f"/api/tickets/{ticket.id}/")
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
+
+
+# ---------------------------------------------------------------------------
+# Dashboard Cache
+# ---------------------------------------------------------------------------
+
+
+class TestDashboardCache:
+    def test_dashboard_stats_cached_on_first_request(self, manager_client):
+        from django.core.cache import cache
+
+        cache.clear()
+        TicketFactory.create_batch(3)
+
+        response1 = manager_client.get("/api/tickets/dashboard_stats/")
+        assert response1.status_code == status.HTTP_200_OK
+        assert response1.data["total"] == 3
+
+        cached = cache.get("dashboard_stats")
+        assert cached is not None
+        assert cached["total"] == 3
+
+    def test_dashboard_stats_returns_cached_data(self, manager_client):
+        from django.core.cache import cache
+
+        cache.clear()
+        TicketFactory.create_batch(2)
+
+        response1 = manager_client.get("/api/tickets/dashboard_stats/")
+        assert response1.data["total"] == 2
+
+        TicketFactory.create_batch(3)
+
+        response2 = manager_client.get("/api/tickets/dashboard_stats/")
+        assert response2.data["total"] == 2
+
+    def test_my_stats_cached_per_user(self, manager_client, manager, agent_client, agent):
+        from django.core.cache import cache
+
+        cache.clear()
+        TicketFactory(assigned_to=agent)
+        TicketFactory(assigned_to=agent)
+        TicketFactory(created_by=manager)
+
+        manager_client.get("/api/tickets/my_stats/")
+        agent_client.get("/api/tickets/my_stats/")
+
+        assert cache.get(f"my_stats_{manager.id}") is not None
+        assert cache.get(f"my_stats_{agent.id}") is not None
+        assert cache.get(f"my_stats_{manager.id}") != cache.get(f"my_stats_{agent.id}")
+
+    def test_cache_uses_300s_timeout(self, manager_client):
+        from django.core.cache import cache
+
+        cache.clear()
+        TicketFactory()
+
+        manager_client.get("/api/tickets/dashboard_stats/")
+
+        cached = cache.get("dashboard_stats")
+        assert cached is not None
+
+    def test_cache_invalidated_on_ticket_create(self, manager_client, manager):
+        from django.core.cache import cache
+
+        cache.clear()
+        manager_client.get("/api/tickets/dashboard_stats/")
+        manager_client.get("/api/tickets/my_stats/")
+        assert cache.get("dashboard_stats") is not None
+        assert cache.get(f"my_stats_{manager.id}") is not None
+
+        manager_client.post(
+            "/api/tickets/",
+            {"title": "New Ticket"},
+            format="json",
+        )
+        assert cache.get("dashboard_stats") is None
+        assert cache.get(f"my_stats_{manager.id}") is None
+
+    def test_cache_invalidated_on_ticket_update(self, manager_client, manager):
+        from django.core.cache import cache
+
+        cache.clear()
+        ticket = TicketFactory(created_by=manager)
+        manager_client.get("/api/tickets/dashboard_stats/")
+        assert cache.get("dashboard_stats") is not None
+
+        manager_client.patch(
+            f"/api/tickets/{ticket.id}/",
+            {"title": "Updated Title"},
+            format="json",
+        )
+        assert cache.get("dashboard_stats") is None
+
+    def test_cache_invalidated_on_ticket_delete(self, manager_client):
+        from django.core.cache import cache
+
+        cache.clear()
+        ticket = TicketFactory()
+        manager_client.get("/api/tickets/dashboard_stats/")
+        assert cache.get("dashboard_stats") is not None
+
+        manager_client.delete(f"/api/tickets/{ticket.id}/")
+        assert cache.get("dashboard_stats") is None
+
+    def test_cache_invalidated_on_status_change(self, manager_client):
+        from django.core.cache import cache
+
+        cache.clear()
+        ticket = TicketFactory()
+        manager_client.get("/api/tickets/dashboard_stats/")
+        assert cache.get("dashboard_stats") is not None
+
+        manager_client.patch(
+            f"/api/tickets/{ticket.id}/",
+            {"status": "IN_PROGRESS"},
+            format="json",
+        )
+        assert cache.get("dashboard_stats") is None
+
+    def test_cache_invalidated_on_assignment(self, manager_client, agent):
+        from django.core.cache import cache
+
+        cache.clear()
+        ticket = TicketFactory()
+        manager_client.get("/api/tickets/dashboard_stats/")
+        manager_client.get("/api/tickets/my_stats/")
+        assert cache.get("dashboard_stats") is not None
+
+        manager_client.patch(
+            f"/api/tickets/{ticket.id}/",
+            {"assigned_to": str(agent.id)},
+            format="json",
+        )
+        assert cache.get("dashboard_stats") is None
+        assert cache.get(f"my_stats_{agent.id}") is None

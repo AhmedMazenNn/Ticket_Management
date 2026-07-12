@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from django.contrib.auth import get_user_model
+from django.core.cache import cache
 
 from apps.audit.services import create_history_entries
 from apps.notifications.models import Notification
@@ -9,6 +10,8 @@ from apps.notifications.services import create_notification
 from .models import Ticket
 
 User = get_user_model()
+
+DASHBOARD_STATS_KEY = "dashboard_stats"
 
 TRACKED_FIELDS = {"title", "description", "priority", "status", "assigned_to"}
 
@@ -23,6 +26,14 @@ STATUS_LABELS = {
     Ticket.Status.IN_PROGRESS: "In Progress",
     Ticket.Status.CLOSED: "Closed",
 }
+
+
+def _invalidate_ticket_caches(*, creator_id, assignee_id=None):
+    """Invalidate dashboard cache keys after ticket mutations."""
+    cache.delete(DASHBOARD_STATS_KEY)
+    cache.delete(f"my_stats_{creator_id}")
+    if assignee_id and assignee_id != creator_id:
+        cache.delete(f"my_stats_{assignee_id}")
 
 
 def _format_value(field_name: str, value) -> str | None:
@@ -67,6 +78,10 @@ def create_ticket(
             user=assigned_to,
             type=Notification.Type.TICKET_ASSIGNED,
         )
+    _invalidate_ticket_caches(
+        creator_id=created_by.id,
+        assignee_id=assigned_to.id if assigned_to else None,
+    )
     return ticket
 
 
@@ -94,12 +109,20 @@ def update_ticket(ticket: Ticket, *, changed_by: User, **validated_data: dict) -
             changes=changes,
         )
         _notify_ticket_update(ticket=ticket, changed_by=changed_by, changes=changes)
+        _invalidate_ticket_caches(
+            creator_id=ticket.created_by_id,
+            assignee_id=ticket.assigned_to_id,
+        )
 
     return ticket
 
 
 def delete_ticket(ticket: Ticket) -> None:
     """Delete a ticket."""
+    _invalidate_ticket_caches(
+        creator_id=ticket.created_by_id,
+        assignee_id=ticket.assigned_to_id,
+    )
     ticket.delete()
 
 
@@ -168,4 +191,12 @@ def assign_ticket(ticket: Ticket, user: User | None, *, changed_by: User) -> Tic
                 user=user,
                 type=Notification.Type.TICKET_ASSIGNED,
             )
+        affected_ids = {changed_by.id, ticket.created_by_id}
+        if old_assignee:
+            affected_ids.add(old_assignee.id)
+        if user:
+            affected_ids.add(user.id)
+        cache.delete(DASHBOARD_STATS_KEY)
+        for uid in affected_ids:
+            cache.delete(f"my_stats_{uid}")
     return ticket
