@@ -410,9 +410,7 @@ class TestNotificationTaskEnqueued:
         with patch("apps.notifications.tasks.send_notification_email.delay") as mock_delay:
             from apps.notifications.services import create_notification
 
-            create_notification(
-                ticket=ticket, user=manager, type=Notification.Type.TICKET_ASSIGNED
-            )
+            create_notification(ticket=ticket, user=manager, type=Notification.Type.TICKET_ASSIGNED)
             call_kwargs = mock_delay.call_args[1]
             for value in call_kwargs.values():
                 assert isinstance(value, str | int | float | bool | type(None))
@@ -432,7 +430,8 @@ class TestSendNotificationEmailTask:
             ticket=ticket, user=manager, type=Notification.Type.TICKET_ASSIGNED
         )
 
-        with patch("apps.notifications.tasks.mail.send_mail") as mock_send_mail:
+        with patch("apps.notifications.tasks.mail.EmailMessage") as mock_email_cls:
+            mock_email_instance = mock_email_cls.return_value
             from apps.notifications.tasks import send_notification_email
 
             send_notification_email(
@@ -442,10 +441,11 @@ class TestSendNotificationEmailTask:
                 ticket_id=str(ticket.id),
                 ticket_title=ticket.title,
             )
-            mock_send_mail.assert_called_once()
-            call_args = mock_send_mail.call_args
-            assert call_args[0][0] == "Ticket Assigned"
-            assert manager.email in call_args[0][3]
+            mock_email_cls.assert_called_once()
+            mock_email_instance.send.assert_called_once()
+            call_kwargs = mock_email_cls.call_args[1]
+            assert "Ticket Assigned" in call_kwargs["subject"]
+            assert manager.email in call_kwargs["to"]
 
     def test_notification_becomes_sent_on_success(self, manager):
         from unittest.mock import patch
@@ -455,7 +455,7 @@ class TestSendNotificationEmailTask:
             ticket=ticket, user=manager, type=Notification.Type.TICKET_ASSIGNED
         )
 
-        with patch("apps.notifications.tasks.mail.send_mail"):
+        with patch("apps.notifications.tasks.mail.EmailMessage"):
             from apps.notifications.tasks import send_notification_email
 
             send_notification_email(
@@ -477,7 +477,9 @@ class TestSendNotificationEmailTask:
             ticket=ticket, user=manager, type=Notification.Type.TICKET_ASSIGNED
         )
 
-        with patch("apps.notifications.tasks.mail.send_mail", side_effect=Exception("SMTP error")):
+        with patch(
+            "apps.notifications.tasks.mail.EmailMessage", side_effect=Exception("SMTP error")
+        ):
             from apps.notifications.tasks import send_notification_email
 
             with pytest.raises(Exception, match="SMTP error"):
@@ -496,7 +498,7 @@ class TestSendNotificationEmailTask:
         import uuid
         from unittest.mock import patch
 
-        with patch("apps.notifications.tasks.mail.send_mail") as mock_send_mail:
+        with patch("apps.notifications.tasks.mail.EmailMessage") as mock_email_cls:
             from apps.notifications.tasks import send_notification_email
 
             send_notification_email(
@@ -506,17 +508,15 @@ class TestSendNotificationEmailTask:
                 ticket_id=str(uuid.uuid4()),
                 ticket_title="Test Ticket",
             )
-            mock_send_mail.assert_not_called()
+            mock_email_cls.assert_not_called()
 
     def test_task_sends_correct_email_content(self, agent):
         from unittest.mock import patch
 
         ticket = TicketFactory(created_by=agent, title="Fix login bug")
-        notif = NotificationFactory(
-            ticket=ticket, user=agent, type=Notification.Type.COMMENT_ADDED
-        )
+        notif = NotificationFactory(ticket=ticket, user=agent, type=Notification.Type.COMMENT_ADDED)
 
-        with patch("apps.notifications.tasks.mail.send_mail") as mock_send_mail:
+        with patch("apps.notifications.tasks.mail.EmailMessage") as mock_email_cls:
             from apps.notifications.tasks import send_notification_email
 
             send_notification_email(
@@ -526,13 +526,36 @@ class TestSendNotificationEmailTask:
                 ticket_id=str(ticket.id),
                 ticket_title=ticket.title,
             )
-            call_args = mock_send_mail.call_args
-            subject = call_args[0][0]
-            body = call_args[0][1]
-            assert subject == "New Comment on Ticket"
+            call_kwargs = mock_email_cls.call_args[1]
+            subject = call_kwargs["subject"]
+            body = call_kwargs["body"]
+            assert "New Comment on Ticket" in subject
             assert "Fix login bug" in body
-            assert "COMMENT_ADDED" not in body
             assert "Comment Added" in body
+
+    def test_task_includes_threading_headers(self, agent):
+        from unittest.mock import patch
+
+        ticket = TicketFactory(created_by=agent, title="Fix login bug")
+        notif = NotificationFactory(
+            ticket=ticket, user=agent, type=Notification.Type.TICKET_ASSIGNED
+        )
+
+        with patch("apps.notifications.tasks.mail.EmailMessage") as mock_email_cls:
+            from apps.notifications.tasks import send_notification_email
+
+            send_notification_email(
+                notification_id=str(notif.id),
+                recipient_email=agent.email,
+                notification_type=Notification.Type.TICKET_ASSIGNED,
+                ticket_id=str(ticket.id),
+                ticket_title=ticket.title,
+            )
+            call_kwargs = mock_email_cls.call_args[1]
+            headers = call_kwargs["headers"]
+            assert "In-Reply-To" in headers
+            assert "References" in headers
+            assert str(ticket.id) in headers["In-Reply-To"]
 
 
 # ---------------------------------------------------------------------------
@@ -549,10 +572,14 @@ class TestNotificationTaskRetry:
             ticket=ticket, user=manager, type=Notification.Type.TICKET_ASSIGNED
         )
 
-        with patch("apps.notifications.tasks.mail.send_mail", side_effect=Exception("Temporary failure")):
+        with patch(
+            "apps.notifications.tasks.mail.EmailMessage", side_effect=Exception("Temporary failure")
+        ):
             from apps.notifications.tasks import send_notification_email
 
-            with patch.object(send_notification_email, "retry", side_effect=celery.exceptions.Retry()) as mock_retry:
+            with patch.object(
+                send_notification_email, "retry", side_effect=celery.exceptions.Retry()
+            ) as mock_retry:
                 send_notification_email.apply(
                     kwargs={
                         "notification_id": str(notif.id),

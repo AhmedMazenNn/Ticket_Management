@@ -1,5 +1,7 @@
 """Reusable email builder for notification emails."""
 
+from django.conf import settings
+
 EMAIL_SUBJECTS = {
     "TICKET_ASSIGNED": "Ticket Assigned",
     "STATUS_CHANGED": "Ticket Status Changed",
@@ -7,8 +9,6 @@ EMAIL_SUBJECTS = {
     "TICKET_UPDATED": "Ticket Updated",
     "COMMENT_ADDED": "New Comment on Ticket",
 }
-
-DEFAULT_FROM_EMAIL = "noreply@ticketapp.local"
 
 
 def build_notification_email(
@@ -20,7 +20,8 @@ def build_notification_email(
 ) -> dict:
     """Build email content for a notification.
 
-    Returns a dict with subject, message, from_email, recipient_list.
+    Returns a dict with subject, message, from_email, recipient_list,
+    and headers for threading emails about the same ticket.
     """
     subject = EMAIL_SUBJECTS.get(notification_type, "Ticket Notification")
     readable_type = notification_type.replace("_", " ").title()
@@ -32,9 +33,17 @@ def build_notification_email(
         f"Regards,\n"
         f"Ticket Management Team"
     )
+
+    message_id = f"ticket-{ticket_id}@ticketapp.local"
+    headers = {
+        "In-Reply-To": message_id,
+        "References": message_id,
+    }
+
     return {
-        "subject": subject,
+        "subject": f"[Ticket {ticket_title}] {subject}",
         "message": message,
-        "from_email": DEFAULT_FROM_EMAIL,
+        "from_email": settings.DEFAULT_FROM_EMAIL,
         "recipient_list": [recipient_email],
+        "headers": headers,
     }

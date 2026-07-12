@@ -46,12 +46,14 @@ def send_notification_email(
     )
 
     try:
-        mail.send_mail(
-            email_data["subject"],
-            email_data["message"],
-            email_data["from_email"],
-            email_data["recipient_list"],
+        msg = mail.EmailMessage(
+            subject=email_data["subject"],
+            body=email_data["message"],
+            from_email=email_data["from_email"],
+            to=email_data["recipient_list"],
+            headers=email_data["headers"],
         )
+        msg.send()
         notification.status = Notification.Status.SENT
         notification.sent_at = timezone.now()
         notification.save(update_fields=["status", "sent_at"])

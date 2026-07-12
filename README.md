@@ -355,12 +355,66 @@ Run `make help` to see all available commands:
 
 ---
 
+## Email Notifications (Gmail SMTP)
+
+### Environment Variables
+
+Configure these in `backend/.env`:
+
+```env
+EMAIL_BACKEND=django.core.mail.backends.smtp.EmailBackend
+EMAIL_HOST=smtp.gmail.com
+EMAIL_PORT=587
+EMAIL_USE_TLS=True
+EMAIL_HOST_USER=your_email@gmail.com
+EMAIL_HOST_PASSWORD=your_google_app_password
+DEFAULT_FROM_EMAIL=your_email@gmail.com
+```
+
+> **Note:** `EMAIL_HOST_PASSWORD` is a [Google App Password](https://myaccount.google.com/apppasswords), not your regular Gmail password. Never commit `.env` to Git.
+
+### How It Works
+
+```
+User action (create/update ticket, add comment)
+        ↓
+create_notification() saves record + calls send_notification_email.delay()
+        ↓
+Redis queues the task
+        ↓
+Celery worker picks it up
+        ↓
+Django send_mail() sends via Gmail SMTP
+        ↓
+Notification.status → SENT (or FAILED on error)
+```
+
+### Testing Email Notifications
+
+1. **Start Redis and the Celery worker:**
+   ```bash
+   make up                    # starts Redis + worker via Docker
+   # — or locally —
+   redis-server               # start Redis
+   cd backend && celery -A core worker --loglevel=info  # start worker
+   ```
+
+2. **Create a ticket or comment** that triggers a notification (e.g., assign a ticket to a user).
+
+3. **Check the recipient's inbox** — the email should arrive from your configured `DEFAULT_FROM_EMAIL`.
+
+4. **Check notification status** in Django admin (`/admin/notifications/notification/`):
+   - `status = SENT` and `sent_at` populated → email delivered
+   - `status = FAILED` → check Celery worker logs for the error
+
+---
+
 ## Assumptions & Notes
 
 - JWT is used for API authentication.
 - Google OAuth is planned via `django-allauth` (not yet implemented).
-- Redis serves as both the Celery broker and result backend (replaces RabbitMQ).
-- The email backend defaults to `console` in development (no SMTP needed).
+- Redis serves as both the Celery broker and result backend.
+- Email is sent via Gmail SMTP (configured in `.env`).
 - Celery tasks auto-retry on failure with exponential backoff (3 attempts).
 - Notification status tracks email delivery: PENDING → SENT / FAILED.
 - No Celery Beat (periodic tasks) — all tasks are triggered by user actions.

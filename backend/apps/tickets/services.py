@@ -93,7 +93,7 @@ def update_ticket(ticket: Ticket, *, changed_by: User, **validated_data: dict) -
             changed_by=changed_by,
             changes=changes,
         )
-        _notify_ticket_update(ticket=ticket, changed_by=changed_by, validated_data=validated_data)
+        _notify_ticket_update(ticket=ticket, changed_by=changed_by, changes=changes)
 
     return ticket
 
@@ -103,41 +103,36 @@ def delete_ticket(ticket: Ticket) -> None:
     ticket.delete()
 
 
-def _notify_ticket_update(
-    *, ticket: Ticket, changed_by: User, validated_data: dict
-) -> None:
-    """Create notifications based on which fields changed."""
+def _notify_ticket_update(*, ticket: Ticket, changed_by: User, changes: list[tuple]) -> None:
+    """Create notifications based on which fields actually changed.
+
+    Args:
+        ticket: The updated ticket.
+        changed_by: The user who made the change.
+        changes: List of (field_name, old_value, new_value) tuples.
+    """
+    changed_fields = {field for field, _, _ in changes}
     recipients: dict[str, set[User]] = {}
 
-    if "assigned_to" in validated_data and ticket.assigned_to:
-        recipients.setdefault(Notification.Type.TICKET_ASSIGNED, set()).add(
-            ticket.assigned_to
-        )
+    if "assigned_to" in changed_fields and ticket.assigned_to:
+        recipients.setdefault(Notification.Type.TICKET_ASSIGNED, set()).add(ticket.assigned_to)
 
-    if "status" in validated_data:
-        recipients.setdefault(Notification.Type.STATUS_CHANGED, set()).add(
-            ticket.created_by
-        )
+    if "status" in changed_fields:
+        recipients.setdefault(Notification.Type.STATUS_CHANGED, set()).add(ticket.created_by)
         if ticket.assigned_to:
             recipients[Notification.Type.STATUS_CHANGED].add(ticket.assigned_to)
 
-    if "priority" in validated_data:
-        recipients.setdefault(Notification.Type.PRIORITY_CHANGED, set()).add(
-            ticket.created_by
-        )
+    if "priority" in changed_fields:
+        recipients.setdefault(Notification.Type.PRIORITY_CHANGED, set()).add(ticket.created_by)
         if ticket.assigned_to:
             recipients[Notification.Type.PRIORITY_CHANGED].add(ticket.assigned_to)
 
     other_fields = {"title", "description"}
-    if other_fields & validated_data.keys():
+    if other_fields & changed_fields:
         if ticket.created_by != changed_by:
-            recipients.setdefault(Notification.Type.TICKET_UPDATED, set()).add(
-                ticket.created_by
-            )
+            recipients.setdefault(Notification.Type.TICKET_UPDATED, set()).add(ticket.created_by)
         if ticket.assigned_to and ticket.assigned_to != changed_by:
-            recipients.setdefault(Notification.Type.TICKET_UPDATED, set()).add(
-                ticket.assigned_to
-            )
+            recipients.setdefault(Notification.Type.TICKET_UPDATED, set()).add(ticket.assigned_to)
 
     for notif_type, users in recipients.items():
         for user in users:
