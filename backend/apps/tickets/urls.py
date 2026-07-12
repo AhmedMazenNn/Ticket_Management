@@ -1,5 +1,7 @@
 from django.urls import path
 
+from apps.comments.views import CommentListCreateView
+
 from .views import (
     DashboardStatsView,
     MyStatsView,
@@ -12,4 +14,9 @@ urlpatterns = [
     path("dashboard_stats/", DashboardStatsView.as_view(), name="dashboard_stats"),
     path("my_stats/", MyStatsView.as_view(), name="my_stats"),
     path("<uuid:id>/", TicketDetailView.as_view(), name="ticket_detail"),
+    path(
+        "<uuid:ticket_id>/comments/",
+        CommentListCreateView.as_view(),
+        name="ticket_comments",
+    ),
 ]
