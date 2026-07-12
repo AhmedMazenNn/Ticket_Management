@@ -13,4 +13,5 @@ class NotificationFactory(factory.django.DjangoModelFactory):
     ticket = factory.SubFactory(TicketFactory)
     user = factory.SubFactory(UserFactory)
     type = Notification.Type.TICKET_ASSIGNED
+    status = Notification.Status.PENDING
     is_read = False

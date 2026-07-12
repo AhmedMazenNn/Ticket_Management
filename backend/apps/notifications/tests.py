@@ -1,3 +1,4 @@
+import celery.exceptions
 import pytest
 from rest_framework import status
 from rest_framework.test import APIClient
@@ -350,3 +351,222 @@ class TestCommentNotification:
             ticket=ticket, type=Notification.Type.COMMENT_ADDED
         )
         assert notifications.count() == 2  # manager + agent
+
+
+# ---------------------------------------------------------------------------
+# Notification Model — Status & Sent At
+# ---------------------------------------------------------------------------
+
+
+class TestNotificationStatus:
+    def test_new_notification_is_pending_by_default(self, manager):
+        ticket = TicketFactory(created_by=manager)
+        notif = NotificationFactory(ticket=ticket, user=manager)
+        assert notif.status == Notification.Status.PENDING
+        assert notif.sent_at is None
+
+    def test_notification_status_choices(self):
+        assert Notification.Status.PENDING == "PENDING"
+        assert Notification.Status.SENT == "SENT"
+        assert Notification.Status.FAILED == "FAILED"
+
+
+# ---------------------------------------------------------------------------
+# Celery Task Enqueued
+# ---------------------------------------------------------------------------
+
+
+class TestNotificationTaskEnqueued:
+    @pytest.mark.parametrize(
+        "notif_type",
+        [
+            Notification.Type.TICKET_ASSIGNED,
+            Notification.Type.STATUS_CHANGED,
+            Notification.Type.PRIORITY_CHANGED,
+            Notification.Type.TICKET_UPDATED,
+            Notification.Type.COMMENT_ADDED,
+        ],
+    )
+    def test_task_enqueued_on_notification_creation(self, manager, notif_type):
+        from unittest.mock import patch
+
+        ticket = TicketFactory(created_by=manager)
+        with patch("apps.notifications.tasks.send_notification_email.delay") as mock_delay:
+            from apps.notifications.services import create_notification
+
+            create_notification(ticket=ticket, user=manager, type=notif_type)
+            mock_delay.assert_called_once()
+            call_kwargs = mock_delay.call_args[1]
+            assert "notification_id" in call_kwargs
+            assert "recipient_email" in call_kwargs
+            assert call_kwargs["notification_type"] == notif_type
+            assert call_kwargs["ticket_id"] == str(ticket.id)
+            assert call_kwargs["ticket_title"] == ticket.title
+
+    def test_task_receives_only_primitives(self, manager):
+        from unittest.mock import patch
+
+        ticket = TicketFactory(created_by=manager)
+        with patch("apps.notifications.tasks.send_notification_email.delay") as mock_delay:
+            from apps.notifications.services import create_notification
+
+            create_notification(
+                ticket=ticket, user=manager, type=Notification.Type.TICKET_ASSIGNED
+            )
+            call_kwargs = mock_delay.call_args[1]
+            for value in call_kwargs.values():
+                assert isinstance(value, str | int | float | bool | type(None))
+
+
+# ---------------------------------------------------------------------------
+# Celery Task — Email Sending
+# ---------------------------------------------------------------------------
+
+
+class TestSendNotificationEmailTask:
+    def test_task_sends_email_successfully(self, manager):
+        from unittest.mock import patch
+
+        ticket = TicketFactory(created_by=manager)
+        notif = NotificationFactory(
+            ticket=ticket, user=manager, type=Notification.Type.TICKET_ASSIGNED
+        )
+
+        with patch("apps.notifications.tasks.mail.send_mail") as mock_send_mail:
+            from apps.notifications.tasks import send_notification_email
+
+            send_notification_email(
+                notification_id=str(notif.id),
+                recipient_email=manager.email,
+                notification_type=Notification.Type.TICKET_ASSIGNED,
+                ticket_id=str(ticket.id),
+                ticket_title=ticket.title,
+            )
+            mock_send_mail.assert_called_once()
+            call_args = mock_send_mail.call_args
+            assert call_args[0][0] == "Ticket Assigned"
+            assert manager.email in call_args[0][3]
+
+    def test_notification_becomes_sent_on_success(self, manager):
+        from unittest.mock import patch
+
+        ticket = TicketFactory(created_by=manager)
+        notif = NotificationFactory(
+            ticket=ticket, user=manager, type=Notification.Type.TICKET_ASSIGNED
+        )
+
+        with patch("apps.notifications.tasks.mail.send_mail"):
+            from apps.notifications.tasks import send_notification_email
+
+            send_notification_email(
+                notification_id=str(notif.id),
+                recipient_email=manager.email,
+                notification_type=Notification.Type.TICKET_ASSIGNED,
+                ticket_id=str(ticket.id),
+                ticket_title=ticket.title,
+            )
+            notif.refresh_from_db()
+            assert notif.status == Notification.Status.SENT
+            assert notif.sent_at is not None
+
+    def test_notification_becomes_failed_on_exception(self, manager):
+        from unittest.mock import patch
+
+        ticket = TicketFactory(created_by=manager)
+        notif = NotificationFactory(
+            ticket=ticket, user=manager, type=Notification.Type.TICKET_ASSIGNED
+        )
+
+        with patch("apps.notifications.tasks.mail.send_mail", side_effect=Exception("SMTP error")):
+            from apps.notifications.tasks import send_notification_email
+
+            with pytest.raises(Exception, match="SMTP error"):
+                send_notification_email(
+                    notification_id=str(notif.id),
+                    recipient_email=manager.email,
+                    notification_type=Notification.Type.TICKET_ASSIGNED,
+                    ticket_id=str(ticket.id),
+                    ticket_title=ticket.title,
+                )
+            notif.refresh_from_db()
+            assert notif.status == Notification.Status.FAILED
+            assert notif.sent_at is None
+
+    def test_task_handles_notification_not_found(self):
+        import uuid
+        from unittest.mock import patch
+
+        with patch("apps.notifications.tasks.mail.send_mail") as mock_send_mail:
+            from apps.notifications.tasks import send_notification_email
+
+            send_notification_email(
+                notification_id=str(uuid.uuid4()),
+                recipient_email="test@example.com",
+                notification_type=Notification.Type.TICKET_ASSIGNED,
+                ticket_id=str(uuid.uuid4()),
+                ticket_title="Test Ticket",
+            )
+            mock_send_mail.assert_not_called()
+
+    def test_task_sends_correct_email_content(self, agent):
+        from unittest.mock import patch
+
+        ticket = TicketFactory(created_by=agent, title="Fix login bug")
+        notif = NotificationFactory(
+            ticket=ticket, user=agent, type=Notification.Type.COMMENT_ADDED
+        )
+
+        with patch("apps.notifications.tasks.mail.send_mail") as mock_send_mail:
+            from apps.notifications.tasks import send_notification_email
+
+            send_notification_email(
+                notification_id=str(notif.id),
+                recipient_email=agent.email,
+                notification_type=Notification.Type.COMMENT_ADDED,
+                ticket_id=str(ticket.id),
+                ticket_title=ticket.title,
+            )
+            call_args = mock_send_mail.call_args
+            subject = call_args[0][0]
+            body = call_args[0][1]
+            assert subject == "New Comment on Ticket"
+            assert "Fix login bug" in body
+            assert "COMMENT_ADDED" not in body
+            assert "Comment Added" in body
+
+
+# ---------------------------------------------------------------------------
+# Celery Task — Retry Behavior
+# ---------------------------------------------------------------------------
+
+
+class TestNotificationTaskRetry:
+    def test_task_retries_on_exception(self, manager):
+        from unittest.mock import patch
+
+        ticket = TicketFactory(created_by=manager)
+        notif = NotificationFactory(
+            ticket=ticket, user=manager, type=Notification.Type.TICKET_ASSIGNED
+        )
+
+        with patch("apps.notifications.tasks.mail.send_mail", side_effect=Exception("Temporary failure")):
+            from apps.notifications.tasks import send_notification_email
+
+            with patch.object(send_notification_email, "retry", side_effect=celery.exceptions.Retry()) as mock_retry:
+                send_notification_email.apply(
+                    kwargs={
+                        "notification_id": str(notif.id),
+                        "recipient_email": manager.email,
+                        "notification_type": Notification.Type.TICKET_ASSIGNED,
+                        "ticket_id": str(ticket.id),
+                        "ticket_title": ticket.title,
+                    },
+                )
+                mock_retry.assert_called_once()
+
+    def test_task_has_retry_configuration(self):
+        from apps.notifications.tasks import send_notification_email
+
+        assert send_notification_email.max_retries == 3
+        assert send_notification_email.default_retry_delay == 60
+        assert send_notification_email.autoretry_for == (Exception,)

@@ -74,8 +74,6 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-      rabbitmq:
-        condition: service_healthy
 
   # ============================================================
   # Celery worker
@@ -93,28 +91,7 @@ services:
     depends_on:
       backend:
         condition: service_started
-      rabbitmq:
-        condition: service_healthy
       redis:
-        condition: service_healthy
-
-  # ============================================================
-  # Celery Beat — periodic task scheduler
-  # ============================================================
-  celery_beat:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
-    restart: unless-stopped
-    command: celery -A core beat --loglevel=info --scheduler django_celery_beat.schedulers:DatabaseScheduler
-    volumes:
-      - ./backend:/app
-    env_file:
-      - ./backend/.env
-    depends_on:
-      backend:
-        condition: service_started
-      db:
         condition: service_healthy
 
   # ============================================================

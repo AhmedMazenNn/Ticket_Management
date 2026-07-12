@@ -5,9 +5,9 @@ from .models import Notification
 
 @admin.register(Notification)
 class NotificationAdmin(admin.ModelAdmin):
-    list_display = ["id", "ticket", "user", "type", "is_read", "created_at"]
-    list_filter = ["type", "is_read"]
-    readonly_fields = ["id", "ticket", "user", "type", "is_read", "created_at"]
+    list_display = ["id", "ticket", "user", "type", "status", "is_read", "created_at", "sent_at"]
+    list_filter = ["type", "status", "is_read"]
+    readonly_fields = ["id", "ticket", "user", "type", "status", "is_read", "created_at", "sent_at"]
 
     def has_add_permission(self, request):
         return False
