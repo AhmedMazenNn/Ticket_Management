@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from django.contrib.auth import get_user_model
 
+from apps.messaging.constants import RoutingKey
+from apps.messaging.publisher import publish_event
 from apps.notifications.models import Notification
 from apps.notifications.services import create_notification
 from apps.tickets.models import Ticket
@@ -36,6 +38,17 @@ def create_comment(
             user=user,
             type=Notification.Type.COMMENT_ADDED,
         )
+
+    publish_event(
+        RoutingKey.COMMENT_CREATED,
+        {
+            "event": "comment.created",
+            "comment_id": str(comment.id),
+            "ticket_id": str(ticket.id),
+            "author": str(author.id),
+            "timestamp": comment.created_at.isoformat(),
+        },
+    )
 
     return comment
 

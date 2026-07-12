@@ -4,6 +4,8 @@ from django.contrib.auth import get_user_model
 from django.core.cache import cache
 
 from apps.audit.services import create_history_entries
+from apps.messaging.constants import RoutingKey
+from apps.messaging.publisher import publish_event
 from apps.notifications.models import Notification
 from apps.notifications.services import create_notification
 
@@ -82,6 +84,16 @@ def create_ticket(
         creator_id=created_by.id,
         assignee_id=assigned_to.id if assigned_to else None,
     )
+    publish_event(
+        RoutingKey.TICKET_CREATED,
+        {
+            "event": "ticket.created",
+            "ticket_id": str(ticket.id),
+            "title": ticket.title,
+            "created_by": str(created_by.id),
+            "timestamp": ticket.created_at.isoformat(),
+        },
+    )
     return ticket
 
 
@@ -112,6 +124,29 @@ def update_ticket(ticket: Ticket, *, changed_by: User, **validated_data: dict) -
         _invalidate_ticket_caches(
             creator_id=ticket.created_by_id,
             assignee_id=ticket.assigned_to_id,
+        )
+        changed_fields = {field for field, _, _ in changes}
+        if "status" in changed_fields:
+            routing_key = RoutingKey.TICKET_STATUS_CHANGED
+            event = "ticket.status_changed"
+        elif "priority" in changed_fields:
+            routing_key = RoutingKey.TICKET_PRIORITY_CHANGED
+            event = "ticket.priority_changed"
+        elif "assigned_to" in changed_fields:
+            routing_key = RoutingKey.TICKET_ASSIGNED
+            event = "ticket.assigned"
+        else:
+            routing_key = RoutingKey.TICKET_UPDATED
+            event = "ticket.updated"
+        publish_event(
+            routing_key,
+            {
+                "event": event,
+                "ticket_id": str(ticket.id),
+                "changed_by": str(changed_by.id),
+                "changes": [{"field": f, "old": o, "new": n} for f, o, n in changes],
+                "timestamp": ticket.updated_at.isoformat(),
+            },
         )
 
     return ticket
@@ -199,4 +234,14 @@ def assign_ticket(ticket: Ticket, user: User | None, *, changed_by: User) -> Tic
         cache.delete(DASHBOARD_STATS_KEY)
         for uid in affected_ids:
             cache.delete(f"my_stats_{uid}")
+        publish_event(
+            RoutingKey.TICKET_ASSIGNED,
+            {
+                "event": "ticket.assigned",
+                "ticket_id": str(ticket.id),
+                "changed_by": str(changed_by.id),
+                "assigned_to": str(user.id) if user else None,
+                "timestamp": ticket.updated_at.isoformat(),
+            },
+        )
     return ticket
