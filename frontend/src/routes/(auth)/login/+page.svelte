@@ -16,12 +16,8 @@
 		error = '';
 		fieldErrors = {};
 
-		if (!email.trim()) {
-			fieldErrors.email = 'Email is required.';
-		}
-		if (!password) {
-			fieldErrors.password = 'Password is required.';
-		}
+		if (!email.trim()) fieldErrors.email = 'Email is required.';
+		if (!password) fieldErrors.password = 'Password is required.';
 		if (Object.keys(fieldErrors).length > 0) return;
 
 		loading = true;
@@ -41,16 +37,16 @@
 <main class="min-h-screen w-full bg-white lg:grid lg:grid-cols-2">
 	<section class="flex min-h-screen items-center justify-center px-6 py-12 sm:px-12">
 		<div class="w-full max-w-md">
-			<div class="mb-12 flex items-center gap-2.5">
+			<div class="mb-12 flex items-center gap-3">
 				<span
-					class="grid h-9 w-9 place-items-center rounded-lg bg-blue-600 text-base font-black text-white"
+					class="grid h-10 w-10 place-items-center rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 text-base font-black text-white shadow-lg shadow-indigo-500/25"
 				>
 					T
 				</span>
 				<span class="text-xl font-bold tracking-tight text-slate-900">TicketFlow</span>
 			</div>
 			<div>
-				<p class="text-sm font-semibold text-blue-600">Welcome back</p>
+				<p class="text-sm font-semibold text-indigo-600">Welcome back</p>
 				<h1 class="mt-2 text-3xl font-bold tracking-tight text-slate-950">
 					Sign in to your workspace
 				</h1>
@@ -61,7 +57,7 @@
 
 			{#if error}
 				<div
-					class="mt-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700"
+					class="mt-6 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-medium text-rose-700"
 				>
 					{error}
 				</div>
@@ -86,7 +82,7 @@
 							type="email"
 							bind:value={email}
 							placeholder="you@company.com"
-							class="h-11 w-full rounded-xl border border-slate-200 pl-10 pr-3 text-sm outline-none transition focus:border-blue-500 focus:ring-3 focus:ring-blue-100 {fieldErrors.email
+							class="h-11 w-full rounded-xl border border-slate-200 pl-10 pr-3 text-sm outline-none transition focus:border-indigo-500 focus:ring-3 focus:ring-indigo-100 {fieldErrors.email
 								? 'border-rose-300'
 								: ''}"
 						/>
@@ -98,7 +94,7 @@
 						class="mb-1.5 flex items-center justify-between text-sm font-semibold text-slate-700"
 					>
 						Password
-						<button type="button" class="font-medium text-blue-600 hover:text-blue-700"
+						<button type="button" class="font-medium text-indigo-600 hover:text-indigo-700"
 							>Forgot password?</button
 						>
 					</span>
@@ -117,7 +113,7 @@
 							required
 							type={showPassword ? 'text' : 'password'}
 							bind:value={password}
-							class="h-11 w-full rounded-xl border border-slate-200 pl-10 pr-11 text-sm outline-none transition focus:border-blue-500 focus:ring-3 focus:ring-blue-100 {fieldErrors.password
+							class="h-11 w-full rounded-xl border border-slate-200 pl-10 pr-11 text-sm outline-none transition focus:border-indigo-500 focus:ring-3 focus:ring-indigo-100 {fieldErrors.password
 								? 'border-rose-300'
 								: ''}"
 						/>
@@ -162,14 +158,14 @@
 					<input
 						type="checkbox"
 						checked
-						class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+						class="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
 					/>
 					Remember me for 30 days
 				</label>
 				<button
 					type="submit"
 					disabled={loading}
-					class="inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 text-sm font-semibold text-white shadow-sm shadow-blue-200 transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+					class="inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 px-4 text-sm font-semibold text-white shadow-lg shadow-indigo-200 transition-all hover:from-indigo-700 hover:to-purple-700 hover:shadow-xl disabled:cursor-not-allowed disabled:opacity-50"
 				>
 					{#if loading}
 						<svg class="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
@@ -203,7 +199,7 @@
 			</form>
 			<p class="mt-8 text-center text-sm text-slate-500">
 				New to TicketFlow?
-				<a href="/register" class="font-semibold text-blue-600 hover:text-blue-700"
+				<a href="/register" class="font-semibold text-indigo-600 hover:text-indigo-700"
 					>Create an account</a
 				>
 			</p>
@@ -213,19 +209,20 @@
 	<section
 		class="relative hidden overflow-hidden bg-slate-950 p-12 lg:flex lg:flex-col lg:justify-between"
 	>
-		<div class="flex items-center gap-2 text-sm font-medium text-slate-300">
+		<div class="gradient-mesh absolute inset-0"></div>
+		<div class="relative z-10 flex items-center gap-2 text-sm font-medium text-slate-300">
 			<span class="h-2 w-2 rounded-full bg-emerald-400"></span>
 			All systems operational
 		</div>
 		<div
-			class="relative mx-auto w-full max-w-lg rounded-2xl border border-white/10 bg-slate-900 p-6 shadow-2xl"
+			class="relative z-10 mx-auto w-full max-w-lg rounded-2xl border border-white/10 bg-white/5 p-6 shadow-2xl backdrop-blur-sm"
 		>
 			<div class="mb-5 flex items-center justify-between">
 				<div>
 					<p class="text-xs font-medium text-slate-400">Support operations</p>
 					<h2 class="mt-1 text-lg font-semibold text-white">Everything in flow</h2>
 				</div>
-				<span class="rounded-lg bg-blue-500/15 px-2.5 py-1 text-xs font-semibold text-blue-300"
+				<span class="rounded-lg bg-indigo-500/15 px-2.5 py-1 text-xs font-semibold text-indigo-300"
 					>This week</span
 				>
 			</div>
@@ -247,7 +244,7 @@
 				<div class="flex items-center justify-between border-b border-white/10 pb-3">
 					<div class="flex items-center gap-2">
 						<span
-							class="grid h-7 w-7 place-items-center rounded-full bg-amber-400 text-[10px] font-bold text-slate-950"
+							class="grid h-7 w-7 place-items-center rounded-full bg-gradient-to-br from-indigo-400 to-purple-500 text-[10px] font-bold text-white"
 							>MC</span
 						>
 						<span class="text-sm font-medium text-white">Maya Chen</span>
@@ -259,7 +256,7 @@
 				</p>
 			</div>
 		</div>
-		<div>
+		<div class="relative z-10">
 			<h2 class="max-w-md text-3xl font-semibold leading-tight tracking-tight text-white">
 				The calm command center for customer work.
 			</h2>
@@ -270,7 +267,7 @@
 			<div class="mt-6 flex gap-5 text-sm text-slate-300">
 				<span class="flex items-center gap-1.5">
 					<svg
-						class="h-4 w-4 text-blue-400"
+						class="h-4 w-4 text-indigo-400"
 						viewBox="0 0 24 24"
 						fill="none"
 						stroke="currentColor"
@@ -280,7 +277,7 @@
 				</span>
 				<span class="flex items-center gap-1.5">
 					<svg
-						class="h-4 w-4 text-blue-400"
+						class="h-4 w-4 text-indigo-400"
 						viewBox="0 0 24 24"
 						fill="none"
 						stroke="currentColor"
@@ -290,7 +287,7 @@
 				</span>
 				<span class="flex items-center gap-1.5">
 					<svg
-						class="h-4 w-4 text-blue-400"
+						class="h-4 w-4 text-indigo-400"
 						viewBox="0 0 24 24"
 						fill="none"
 						stroke="currentColor"

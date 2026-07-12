@@ -8,7 +8,7 @@
 		onclick,
 		children
 	}: {
-		variant?: 'primary' | 'secondary';
+		variant?: 'primary' | 'secondary' | 'danger';
 		loading?: boolean;
 		type?: 'button' | 'submit' | 'reset';
 		onclick?: () => void;
@@ -20,10 +20,12 @@
 	{type}
 	{onclick}
 	disabled={loading}
-	class="inline-flex h-10 items-center gap-2 rounded-xl px-4 text-sm font-semibold shadow-sm transition-colors disabled:cursor-not-allowed disabled:opacity-60
+	class="inline-flex h-10 items-center gap-2 rounded-xl px-4 text-sm font-semibold shadow-sm transition-all duration-150 disabled:cursor-not-allowed disabled:opacity-50
 		{variant === 'primary'
-		? 'bg-blue-600 text-white shadow-blue-200 hover:bg-blue-700'
-		: 'border border-slate-200 bg-white text-slate-700 hover:bg-slate-50'}"
+		? 'bg-indigo-600 text-white shadow-indigo-200 hover:bg-indigo-700 hover:shadow-md'
+		: variant === 'danger'
+			? 'bg-rose-600 text-white shadow-rose-200 hover:bg-rose-700'
+			: 'border border-slate-200 bg-white text-slate-700 shadow-slate-100 hover:bg-slate-50 hover:shadow-sm'}"
 >
 	{#if loading}
 		<svg class="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">

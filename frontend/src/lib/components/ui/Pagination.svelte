@@ -42,7 +42,7 @@
 			type="button"
 			onclick={() => goToPage(current - 1)}
 			disabled={current <= 1}
-			class="rounded-lg border border-slate-200 p-2 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed"
+			class="rounded-lg border border-surface-200 p-2 hover:bg-surface-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
 			aria-label="Previous page"
 		>
 			<svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -51,15 +51,15 @@
 		</button>
 		{#each pages() as p}
 			{#if p === '...'}
-				<span class="px-1 text-xs text-slate-400">...</span>
+				<span class="px-1 text-xs text-surface-400">...</span>
 			{:else}
 				<button
 					type="button"
 					onclick={() => goToPage(p as number)}
 					class="rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors
 						{p === current
-						? 'bg-blue-50 text-blue-700'
-						: 'text-slate-500 hover:bg-slate-100'}"
+						? 'bg-primary-50 text-primary-700'
+						: 'text-surface-500 hover:bg-surface-100'}"
 				>
 					{p}
 				</button>
@@ -69,7 +69,7 @@
 			type="button"
 			onclick={() => goToPage(current + 1)}
 			disabled={current >= totalPages}
-			class="rounded-lg border border-slate-200 p-2 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed"
+			class="rounded-lg border border-surface-200 p-2 hover:bg-surface-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
 			aria-label="Next page"
 		>
 			<svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">

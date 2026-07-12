@@ -73,14 +73,14 @@
 </script>
 
 <AppShell title="Notifications" subtitle="Stay updated on ticket activity across your team.">
-	<Card className="overflow-hidden">
-		<div class="flex flex-col gap-3 border-b border-slate-200 p-4 sm:flex-row sm:items-center sm:justify-between">
+	<Card className="overflow-hidden shadow-sm">
+		<div class="flex flex-col gap-3 border-b border-surface-200 p-4 sm:flex-row sm:items-center sm:justify-between">
 			<div class="flex gap-2">
 				<button
 					type="button"
 					onclick={() => updateParam('filter', 'all')}
 					class="rounded-lg px-3 py-1.5 text-sm font-medium transition-colors
-						{filter === 'all' ? 'bg-blue-50 text-blue-700' : 'text-slate-500 hover:bg-slate-100'}"
+						{filter === 'all' ? 'bg-primary-50 text-primary-700' : 'text-surface-500 hover:bg-surface-100'}"
 				>
 					All
 				</button>
@@ -88,11 +88,11 @@
 					type="button"
 					onclick={() => updateParam('filter', 'unread')}
 					class="rounded-lg px-3 py-1.5 text-sm font-medium transition-colors
-						{filter === 'unread' ? 'bg-blue-50 text-blue-700' : 'text-slate-500 hover:bg-slate-100'}"
+						{filter === 'unread' ? 'bg-primary-50 text-primary-700' : 'text-surface-500 hover:bg-surface-100'}"
 				>
 					Unread
 					{#if notifications.unreadCount > 0}
-						<span class="ml-1 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white">
+						<span class="ml-1 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-rose-500 px-1 text-[10px] font-bold text-white">
 							{notifications.unreadCount > 99 ? '99+' : notifications.unreadCount}
 						</span>
 					{/if}
@@ -101,34 +101,34 @@
 		</div>
 
 		{#if items.length === 0}
-			<div class="px-6 py-16 text-center text-sm text-slate-400">
+			<div class="px-6 py-16 text-center text-sm text-surface-400">
 				{filter === 'unread' ? 'No unread notifications.' : 'No notifications yet.'}
 			</div>
 		{:else}
-			<div class="divide-y divide-slate-100">
+			<div class="divide-y divide-surface-100">
 				{#each items as notification (notification.id)}
 					<button
 						type="button"
 						onclick={() => markAsRead(notification)}
-						class="flex w-full items-start gap-4 px-5 py-4 text-left transition-colors hover:bg-slate-50
-							{notification.is_read ? '' : 'bg-blue-50/40'}"
+						class="flex w-full items-start gap-4 px-5 py-4 text-left transition-colors hover:bg-surface-50
+							{notification.is_read ? '' : 'bg-primary-50/40'}"
 					>
-						<span class="mt-1 h-2.5 w-2.5 shrink-0 rounded-full {notification.is_read ? 'bg-transparent' : 'bg-blue-500'}"></span>
+						<span class="mt-1 h-2.5 w-2.5 shrink-0 rounded-full {notification.is_read ? 'bg-transparent' : 'bg-primary-500'}"></span>
 						<div class="min-w-0 flex-1">
 							<div class="flex items-center gap-2">
-								<span class="text-sm font-semibold text-slate-900">
+								<span class="text-sm font-semibold text-surface-900">
 									{NOTIFICATION_LABELS[notification.type as NotificationType]}
 								</span>
 								<Badge value={notification.ticket.priority} type="priority" />
 							</div>
-							<p class="mt-1 text-sm text-slate-600">
-								<span class="font-medium text-slate-800">{notification.ticket.title}</span>
+							<p class="mt-1 text-sm text-surface-600">
+								<span class="font-medium text-surface-800">{notification.ticket.title}</span>
 							</p>
-							<p class="mt-1 text-xs text-slate-400">
+							<p class="mt-1 text-xs text-surface-400">
 								{formatDate(notification.created_at)} &middot; {timeAgo(notification.created_at)}
 							</p>
 						</div>
-						<svg class="mt-1 h-4 w-4 shrink-0 text-slate-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+						<svg class="mt-1 h-4 w-4 shrink-0 text-surface-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
 							<path d="M9 18l6-6-6-6" />
 						</svg>
 					</button>
@@ -136,10 +136,9 @@
 			</div>
 		{/if}
 
-		<div class="flex flex-col gap-3 border-t border-slate-200 px-5 py-4 text-sm text-slate-500 sm:flex-row sm:items-center sm:justify-between">
+		<div class="flex flex-col gap-3 border-t border-surface-200 px-5 py-4 text-sm text-surface-500 sm:flex-row sm:items-center sm:justify-between">
 			<span>
-				Showing <b class="text-slate-700">{items.length}</b> of {count}
-				notifications
+				Showing <b class="text-surface-700">{items.length}</b> of {count} notifications
 			</span>
 			<Pagination current={currentPage} total={count} onchange={handlePageChange} />
 		</div>

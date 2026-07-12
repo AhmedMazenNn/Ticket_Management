@@ -115,179 +115,116 @@
 		await api.logout();
 		goto('/login');
 	}
+
+	const navItems = [
+		{
+			href: '/dashboard',
+			label: 'Dashboard',
+			icon: 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-4 0a1 1 0 01-1-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 01-1 1'
+		},
+		{
+			href: '/tickets',
+			label: 'Tickets',
+			icon: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2'
+		},
+		{
+			href: '/notifications',
+			label: 'Notifications',
+			icon: 'M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9'
+		},
+		{
+			href: '/profile',
+			label: 'Profile',
+			icon: 'M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z'
+		},
+		{
+			href: '/settings',
+			label: 'Settings',
+			icon: 'M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z M15 12a3 3 0 11-6 0 3 3 0 016 0z'
+		}
+	];
 </script>
 
-<div class="flex min-h-screen bg-slate-50">
-	<!-- Mobile backdrop -->
+<div class="flex min-h-screen bg-slate-50/80">
 	{#if mobileOpen}
 		<button
 			type="button"
-			class="fixed inset-0 z-40 bg-black/40 lg:hidden"
+			class="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm lg:hidden"
 			onclick={closeMobile}
 			aria-label="Close sidebar"
 		></button>
 	{/if}
 
-	<!-- Sidebar -->
 	<aside
-		class="fixed inset-y-0 left-0 z-50 flex flex-col border-r border-slate-200 bg-white transition-transform duration-200
+		class="fixed inset-y-0 left-0 z-50 flex flex-col sidebar-gradient transition-all duration-300
 			lg:sticky lg:z-auto lg:translate-x-0
 			{mobileOpen ? 'translate-x-0' : '-translate-x-full'}
-			{sidebarOpen ? 'lg:w-60' : 'lg:w-16'} w-60"
+			{sidebarOpen ? 'lg:w-60' : 'lg:w-[68px]'} w-60"
 	>
-		<div class="flex h-14 items-center gap-2.5 border-b border-slate-200 px-4">
+		<div class="flex h-16 items-center gap-3 border-b border-white/10 px-4">
 			<span
-				class="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-blue-600 text-sm font-black text-white"
+				class="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 text-sm font-black text-white shadow-lg shadow-indigo-500/25"
 			>
 				T
 			</span>
 			{#if sidebarOpen || mobileOpen}
-				<span class="text-base font-bold tracking-tight text-slate-900"> TicketFlow </span>
+				<span class="text-lg font-bold tracking-tight text-white"> TicketFlow </span>
 			{/if}
 		</div>
 
-		<nav class="flex-1 space-y-1 overflow-y-auto px-2 py-3">
-			<a
-				href="/dashboard"
-				onclick={closeMobile}
-				class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors
-					{pathname === '/dashboard'
-					? 'bg-blue-50 text-blue-700'
-					: 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'}"
-			>
-				<svg
-					class="h-5 w-5 shrink-0"
-					viewBox="0 0 24 24"
-					fill="none"
-					stroke="currentColor"
-					stroke-width="1.5"
+		<nav class="flex-1 space-y-1 overflow-y-auto px-3 py-4">
+			{#each navItems as item}
+				<a
+					href={item.href}
+					onclick={closeMobile}
+					class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-150
+						{pathname === item.href || (item.href !== '/dashboard' && pathname.startsWith(item.href))
+						? 'bg-white/10 text-white shadow-sm'
+						: 'text-slate-400 hover:bg-white/5 hover:text-white'}"
 				>
-					<rect x="3" y="3" width="7" height="7" rx="1.5" />
-					<rect x="14" y="3" width="7" height="7" rx="1.5" />
-					<rect x="3" y="14" width="7" height="7" rx="1.5" />
-					<rect x="14" y="14" width="7" height="7" rx="1.5" />
-				</svg>
-				{#if sidebarOpen || mobileOpen}
-					Dashboard
-				{/if}
-			</a>
-			<a
-				href="/tickets"
-				onclick={closeMobile}
-				class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors
-					{pathname === '/tickets'
-					? 'bg-blue-50 text-blue-700'
-					: 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'}"
-			>
-				<svg
-					class="h-5 w-5 shrink-0"
-					viewBox="0 0 24 24"
-					fill="none"
-					stroke="currentColor"
-					stroke-width="1.5"
-				>
-					<path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2" />
-					<rect x="9" y="3" width="6" height="4" rx="1" />
-				</svg>
-				{#if sidebarOpen || mobileOpen}
-					Tickets
-				{/if}
-			</a>
-			<a
-				href="/settings"
-				onclick={closeMobile}
-				class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors
-					{pathname === '/settings'
-					? 'bg-blue-50 text-blue-700'
-					: 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'}"
-			>
-				<svg
-					class="h-5 w-5 shrink-0"
-					viewBox="0 0 24 24"
-					fill="none"
-					stroke="currentColor"
-					stroke-width="1.5"
-				>
-					<path
-						d="M12.22 2h-.44a2 2 0 00-2 2v.18a2 2 0 01-1 1.73l-.43.25a2 2 0 01-2 0l-.15-.08a2 2 0 00-2.73.73l-.22.38a2 2 0 00.73 2.73l.15.1a2 2 0 011 1.72v.51a2 2 0 01-1 1.74l-.15.09a2 2 0 00-.73 2.73l.22.38a2 2 0 002.73.73l.15-.08a2 2 0 012 0l.43.25a2 2 0 011 1.73V20a2 2 0 002 2h.44a2 2 0 002-2v-.18a2 2 0 011-1.73l.43-.25a2 2 0 012 0l.15.08a2 2 0 002.73-.73l.22-.39a2 2 0 00-.73-2.73l-.15-.08a2 2 0 01-1-1.74v-.5a2 2 0 011-1.74l.15-.09a2 2 0 00.73-2.73l-.22-.38a2 2 0 00-2.73-.73l-.15.08a2 2 0 01-2 0l-.43-.25a2 2 0 01-1-1.73V4a2 2 0 00-2-2z"
-					/>
-					<circle cx="12" cy="12" r="3" />
-				</svg>
-				{#if sidebarOpen || mobileOpen}
-					Settings
-				{/if}
-			</a>
-			<a
-				href="/notifications"
-				onclick={closeMobile}
-				class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors
-					{pathname === '/notifications'
-					? 'bg-blue-50 text-blue-700'
-					: 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'}"
-			>
-				<svg
-					class="h-5 w-5 shrink-0"
-					viewBox="0 0 24 24"
-					fill="none"
-					stroke="currentColor"
-					stroke-width="1.5"
-				>
-					<path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9" />
-					<path d="M13.73 21a2 2 0 01-3.46 0" />
-				</svg>
-				{#if sidebarOpen || mobileOpen}
-					Notifications
-					{#if notifications.unreadCount > 0}
-						<span class="ml-auto inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white">
-							{notifications.unreadCount > 99 ? '99+' : notifications.unreadCount}
-						</span>
+					<svg
+						class="h-5 w-5 shrink-0"
+						viewBox="0 0 24 24"
+						fill="none"
+						stroke="currentColor"
+						stroke-width="1.5"
+						stroke-linecap="round"
+						stroke-linejoin="round"
+					>
+						<path d={item.icon} />
+					</svg>
+					{#if sidebarOpen || mobileOpen}
+						{item.label}
+						{#if item.href === '/notifications' && notifications.unreadCount > 0}
+							<span class="ml-auto inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-rose-500 px-1.5 text-[10px] font-bold text-white shadow-sm">
+								{notifications.unreadCount > 99 ? '99+' : notifications.unreadCount}
+							</span>
+						{/if}
 					{/if}
-				{/if}
-			</a>
-			<a
-				href="/profile"
-				onclick={closeMobile}
-				class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors
-					{pathname === '/profile'
-					? 'bg-blue-50 text-blue-700'
-					: 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'}"
-			>
-				<svg
-					class="h-5 w-5 shrink-0"
-					viewBox="0 0 24 24"
-					fill="none"
-					stroke="currentColor"
-					stroke-width="1.5"
-				>
-					<path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" />
-					<circle cx="12" cy="7" r="4" />
-				</svg>
-				{#if sidebarOpen || mobileOpen}
-					Profile
-				{/if}
-			</a>
+				</a>
+			{/each}
 		</nav>
 
 		{#if auth.user}
-			<div class="shrink-0 border-t border-slate-200 px-3 py-3">
+			<div class="shrink-0 border-t border-white/10 px-3 py-3">
 				<div class="flex items-center gap-3">
 					<span
-						class="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-blue-600 text-xs font-bold text-white"
+						class="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-gradient-to-br from-indigo-400 to-purple-500 text-[10px] font-bold text-white"
 					>
 						{userInitials}
 					</span>
 					{#if sidebarOpen || mobileOpen}
-						<div class="min-w-0 flex-1 rounded-lg bg-slate-100 px-3 py-1.5">
-							<p class="truncate text-sm font-semibold text-slate-900">
+						<div class="min-w-0 flex-1">
+							<p class="truncate text-sm font-semibold text-white">
 								{auth.user.first_name}
 								{auth.user.last_name}
 							</p>
-							<p class="truncate text-xs text-slate-500">{auth.user.email}</p>
+							<p class="truncate text-xs text-slate-400">{auth.user.email}</p>
 						</div>
 						<button
 							type="button"
 							onclick={handleLogout}
-							class="shrink-0 rounded-lg p-1.5 text-slate-400 hover:bg-red-50 hover:text-red-600"
+							class="shrink-0 rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-white/10 hover:text-white"
 							aria-label="Sign out"
 						>
 							<svg
@@ -310,7 +247,7 @@
 		<button
 			type="button"
 			onclick={() => (sidebarOpen = !sidebarOpen)}
-			class="hidden lg:flex h-10 items-center justify-center border-t border-slate-200 text-slate-400 hover:text-slate-600"
+			class="hidden lg:flex h-10 items-center justify-center border-t border-white/10 text-slate-400 transition-colors hover:text-white"
 			aria-label="Toggle sidebar"
 		>
 			<svg
@@ -326,11 +263,11 @@
 	</aside>
 
 	<div class="flex flex-1 flex-col min-w-0">
-		<header class="flex items-center gap-3 border-b border-slate-200 bg-white px-4 py-3 sm:px-6">
+		<header class="glass sticky top-0 z-30 flex items-center gap-4 border-b border-slate-200/60 px-4 py-3 sm:px-6">
 			<button
 				type="button"
 				onclick={() => (mobileOpen = !mobileOpen)}
-				class="lg:hidden shrink-0 rounded-lg p-2 text-slate-500 hover:bg-slate-100"
+				class="lg:hidden shrink-0 rounded-xl p-2 text-slate-500 transition-colors hover:bg-slate-100"
 				aria-label="Open menu"
 			>
 				<svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -338,7 +275,7 @@
 				</svg>
 			</button>
 			<div class="min-w-0 flex-1">
-				<h1 class="truncate text-lg font-bold tracking-tight text-slate-950 sm:text-xl">{title}</h1>
+				<h1 class="truncate text-lg font-bold tracking-tight text-slate-900 sm:text-xl">{title}</h1>
 				{#if subtitle}
 					<p class="mt-0.5 hidden text-sm text-slate-500 sm:block">{subtitle}</p>
 				{/if}
@@ -347,7 +284,7 @@
 				<button
 					type="button"
 					onclick={toggleBell}
-					class="relative rounded-lg p-2 text-slate-500 hover:bg-slate-100 hover:text-slate-700"
+					class="relative rounded-xl p-2.5 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600"
 					aria-label="Notifications"
 				>
 					<svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
@@ -355,7 +292,7 @@
 						<path d="M13.73 21a2 2 0 01-3.46 0" />
 					</svg>
 					{#if notifications.unreadCount > 0}
-						<span class="absolute -top-0.5 -right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white">
+						<span class="absolute -top-0.5 -right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-rose-500 px-1 text-[10px] font-bold text-white shadow-sm">
 							{notifications.unreadCount > 99 ? '99+' : notifications.unreadCount}
 						</span>
 					{/if}
@@ -367,14 +304,14 @@
 						onclick={closeBell}
 						aria-label="Close notifications"
 					></button>
-					<div class="absolute right-0 top-full z-50 mt-2 w-80 rounded-xl border border-slate-200 bg-white shadow-xl">
+					<div class="absolute right-0 top-full z-50 mt-2 w-80 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl">
 						<div class="flex items-center justify-between border-b border-slate-100 px-4 py-3">
 							<h3 class="text-sm font-semibold text-slate-900">Notifications</h3>
 							{#if recentNotifications.some((n) => !n.is_read)}
 								<button
 									type="button"
 									onclick={handleMarkAllRead}
-									class="text-xs font-medium text-blue-600 hover:text-blue-800"
+									class="text-xs font-medium text-indigo-600 hover:text-indigo-800"
 								>
 									Mark all read
 								</button>
@@ -396,9 +333,9 @@
 										type="button"
 										onclick={() => handleMarkAsRead(notification)}
 										class="flex w-full items-start gap-3 px-4 py-3 text-left transition-colors hover:bg-slate-50
-											{notification.is_read ? '' : 'bg-blue-50/50'}"
+											{notification.is_read ? '' : 'bg-indigo-50/40'}"
 									>
-										<span class="mt-0.5 h-2 w-2 shrink-0 rounded-full {notification.is_read ? 'bg-transparent' : 'bg-blue-500'}"></span>
+										<span class="mt-0.5 h-2 w-2 shrink-0 rounded-full {notification.is_read ? 'bg-transparent' : 'bg-indigo-500'}"></span>
 										<div class="min-w-0 flex-1">
 											<p class="text-sm font-medium text-slate-900">{NOTIFICATION_LABELS[notification.type]}</p>
 											<p class="mt-0.5 truncate text-xs text-slate-500">{notification.ticket.title}</p>
@@ -412,7 +349,7 @@
 							<a
 								href="/notifications"
 								onclick={closeBell}
-								class="block text-center text-xs font-medium text-blue-600 hover:text-blue-800"
+								class="block text-center text-xs font-medium text-indigo-600 hover:text-indigo-800"
 							>
 								View all notifications
 							</a>

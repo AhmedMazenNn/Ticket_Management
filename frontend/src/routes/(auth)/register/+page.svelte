@@ -22,7 +22,8 @@
 		if (!email.trim()) fieldErrors.email = 'Email is required.';
 		if (!password) fieldErrors.password = 'Password is required.';
 		else if (password.length < 8) fieldErrors.password = 'Password must be at least 8 characters.';
-		if (password !== confirmPassword) fieldErrors.confirmPassword = 'Passwords do not match.';
+		if (password !== confirmPassword)
+			fieldErrors.confirmPassword = 'Passwords do not match.';
 		if (Object.keys(fieldErrors).length > 0) return;
 
 		loading = true;
@@ -42,23 +43,23 @@
 <main class="min-h-screen w-full bg-white lg:grid lg:grid-cols-2">
 	<section class="flex min-h-screen items-center justify-center px-6 py-12 sm:px-12">
 		<div class="w-full max-w-md">
-			<div class="mb-12 flex items-center gap-2.5">
+			<div class="mb-12 flex items-center gap-3">
 				<span
-					class="grid h-9 w-9 place-items-center rounded-lg bg-blue-600 text-base font-black text-white"
+					class="grid h-10 w-10 place-items-center rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 text-base font-black text-white shadow-lg shadow-indigo-500/25"
 				>
 					T
 				</span>
 				<span class="text-xl font-bold tracking-tight text-slate-900">TicketFlow</span>
 			</div>
 			<div>
-				<p class="text-sm font-semibold text-blue-600">Create an account</p>
+				<p class="text-sm font-semibold text-indigo-600">Create an account</p>
 				<h1 class="mt-2 text-3xl font-bold tracking-tight text-slate-950">Join your workspace</h1>
 				<p class="mt-3 text-sm leading-6 text-slate-500">Get started with TicketFlow in seconds.</p>
 			</div>
 
 			{#if error}
 				<div
-					class="mt-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700"
+					class="mt-6 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-medium text-rose-700"
 				>
 					{error}
 				</div>
@@ -83,7 +84,7 @@
 								type="text"
 								bind:value={firstName}
 								placeholder="Alex"
-								class="h-11 w-full rounded-xl border border-slate-200 pl-10 pr-3 text-sm outline-none transition focus:border-blue-500 focus:ring-3 focus:ring-blue-100"
+								class="h-11 w-full rounded-xl border border-slate-200 pl-10 pr-3 text-sm outline-none transition focus:border-indigo-500 focus:ring-3 focus:ring-indigo-100"
 							/>
 						</div>
 					</label>
@@ -104,7 +105,7 @@
 								type="text"
 								bind:value={lastName}
 								placeholder="Stone"
-								class="h-11 w-full rounded-xl border border-slate-200 pl-10 pr-3 text-sm outline-none transition focus:border-blue-500 focus:ring-3 focus:ring-blue-100"
+								class="h-11 w-full rounded-xl border border-slate-200 pl-10 pr-3 text-sm outline-none transition focus:border-indigo-500 focus:ring-3 focus:ring-indigo-100"
 							/>
 						</div>
 					</label>
@@ -127,7 +128,7 @@
 							type="email"
 							bind:value={email}
 							placeholder="you@company.com"
-							class="h-11 w-full rounded-xl border border-slate-200 pl-10 pr-3 text-sm outline-none transition focus:border-blue-500 focus:ring-3 focus:ring-blue-100 {fieldErrors.email
+							class="h-11 w-full rounded-xl border border-slate-200 pl-10 pr-3 text-sm outline-none transition focus:border-indigo-500 focus:ring-3 focus:ring-indigo-100 {fieldErrors.email
 								? 'border-rose-300'
 								: ''}"
 						/>
@@ -153,7 +154,7 @@
 							bind:value={password}
 							minlength="8"
 							placeholder="At least 8 characters"
-							class="h-11 w-full rounded-xl border border-slate-200 pl-10 pr-11 text-sm outline-none transition focus:border-blue-500 focus:ring-3 focus:ring-blue-100 {fieldErrors.password
+							class="h-11 w-full rounded-xl border border-slate-200 pl-10 pr-11 text-sm outline-none transition focus:border-indigo-500 focus:ring-3 focus:ring-indigo-100 {fieldErrors.password
 								? 'border-rose-300'
 								: ''}"
 						/>
@@ -164,28 +165,14 @@
 							aria-label={showPassword ? 'Hide password' : 'Show password'}
 						>
 							{#if showPassword}
-								<svg
-									class="h-4 w-4"
-									viewBox="0 0 24 24"
-									fill="none"
-									stroke="currentColor"
-									stroke-width="1.5"
-								>
-									<path
-										d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94"
-									/>
+								<svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+									<path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94" />
 									<path d="M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19" />
 									<path d="M1 1l22 22" />
 									<path d="M14.12 14.12A3 3 0 019.88 9.88" />
 								</svg>
 							{:else}
-								<svg
-									class="h-4 w-4"
-									viewBox="0 0 24 24"
-									fill="none"
-									stroke="currentColor"
-									stroke-width="1.5"
-								>
+								<svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
 									<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
 									<circle cx="12" cy="12" r="3" />
 								</svg>
@@ -212,7 +199,7 @@
 							bind:value={confirmPassword}
 							minlength="8"
 							placeholder="Repeat your password"
-							class="h-11 w-full rounded-xl border border-slate-200 pl-10 pr-3 text-sm outline-none transition focus:border-blue-500 focus:ring-3 focus:ring-blue-100 {fieldErrors.confirmPassword
+							class="h-11 w-full rounded-xl border border-slate-200 pl-10 pr-3 text-sm outline-none transition focus:border-indigo-500 focus:ring-3 focus:ring-indigo-100 {fieldErrors.confirmPassword
 								? 'border-rose-300'
 								: ''}"
 						/>
@@ -222,33 +209,16 @@
 				<button
 					type="submit"
 					disabled={loading}
-					class="inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 text-sm font-semibold text-white shadow-sm shadow-blue-200 transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+					class="inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 px-4 text-sm font-semibold text-white shadow-lg shadow-indigo-200 transition-all hover:from-indigo-700 hover:to-purple-700 hover:shadow-xl disabled:cursor-not-allowed disabled:opacity-50"
 				>
 					{#if loading}
 						<svg class="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
-							<circle
-								class="opacity-25"
-								cx="12"
-								cy="12"
-								r="10"
-								stroke="currentColor"
-								stroke-width="4"
-							/>
-							<path
-								class="opacity-75"
-								fill="currentColor"
-								d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
-							/>
+							<circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+							<path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
 						</svg>
 					{:else}
 						Create account
-						<svg
-							class="h-4 w-4"
-							viewBox="0 0 24 24"
-							fill="none"
-							stroke="currentColor"
-							stroke-width="2"
-						>
+						<svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
 							<path d="M5 12h14M12 5l7 7-7 7" />
 						</svg>
 					{/if}
@@ -256,7 +226,7 @@
 			</form>
 			<p class="mt-8 text-center text-sm text-slate-500">
 				Already have an account?
-				<a href="/login" class="font-semibold text-blue-600 hover:text-blue-700">Sign in</a>
+				<a href="/login" class="font-semibold text-indigo-600 hover:text-indigo-700">Sign in</a>
 			</p>
 		</div>
 	</section>
@@ -264,19 +234,20 @@
 	<section
 		class="relative hidden overflow-hidden bg-slate-950 p-12 lg:flex lg:flex-col lg:justify-between"
 	>
-		<div class="flex items-center gap-2 text-sm font-medium text-slate-300">
+		<div class="gradient-mesh absolute inset-0"></div>
+		<div class="relative z-10 flex items-center gap-2 text-sm font-medium text-slate-300">
 			<span class="h-2 w-2 rounded-full bg-emerald-400"></span>
 			All systems operational
 		</div>
 		<div
-			class="relative mx-auto w-full max-w-lg rounded-2xl border border-white/10 bg-slate-900 p-6 shadow-2xl"
+			class="relative z-10 mx-auto w-full max-w-lg rounded-2xl border border-white/10 bg-white/5 p-6 shadow-2xl backdrop-blur-sm"
 		>
 			<div class="mb-5 flex items-center justify-between">
 				<div>
 					<p class="text-xs font-medium text-slate-400">Support operations</p>
 					<h2 class="mt-1 text-lg font-semibold text-white">Everything in flow</h2>
 				</div>
-				<span class="rounded-lg bg-blue-500/15 px-2.5 py-1 text-xs font-semibold text-blue-300"
+				<span class="rounded-lg bg-indigo-500/15 px-2.5 py-1 text-xs font-semibold text-indigo-300"
 					>This week</span
 				>
 			</div>
@@ -298,7 +269,7 @@
 				<div class="flex items-center justify-between border-b border-white/10 pb-3">
 					<div class="flex items-center gap-2">
 						<span
-							class="grid h-7 w-7 place-items-center rounded-full bg-amber-400 text-[10px] font-bold text-slate-950"
+							class="grid h-7 w-7 place-items-center rounded-full bg-gradient-to-br from-indigo-400 to-purple-500 text-[10px] font-bold text-white"
 							>MC</span
 						>
 						<span class="text-sm font-medium text-white">Maya Chen</span>
@@ -310,7 +281,7 @@
 				</p>
 			</div>
 		</div>
-		<div>
+		<div class="relative z-10">
 			<h2 class="max-w-md text-3xl font-semibold leading-tight tracking-tight text-white">
 				The calm command center for customer work.
 			</h2>
@@ -320,33 +291,15 @@
 			</p>
 			<div class="mt-6 flex gap-5 text-sm text-slate-300">
 				<span class="flex items-center gap-1.5">
-					<svg
-						class="h-4 w-4 text-blue-400"
-						viewBox="0 0 24 24"
-						fill="none"
-						stroke="currentColor"
-						stroke-width="2"><path d="M20 6L9 17l-5-5" /></svg
-					>
+					<svg class="h-4 w-4 text-indigo-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5" /></svg>
 					Unified context
 				</span>
 				<span class="flex items-center gap-1.5">
-					<svg
-						class="h-4 w-4 text-blue-400"
-						viewBox="0 0 24 24"
-						fill="none"
-						stroke="currentColor"
-						stroke-width="2"><path d="M20 6L9 17l-5-5" /></svg
-					>
+					<svg class="h-4 w-4 text-indigo-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5" /></svg>
 					Clear ownership
 				</span>
 				<span class="flex items-center gap-1.5">
-					<svg
-						class="h-4 w-4 text-blue-400"
-						viewBox="0 0 24 24"
-						fill="none"
-						stroke="currentColor"
-						stroke-width="2"><path d="M20 6L9 17l-5-5" /></svg
-					>
+					<svg class="h-4 w-4 text-indigo-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5" /></svg>
 					Faster resolution
 				</span>
 			</div>

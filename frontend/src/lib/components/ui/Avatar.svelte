@@ -13,7 +13,7 @@
 </script>
 
 <span
-	class="inline-flex shrink-0 items-center justify-center rounded-full bg-blue-600 font-bold text-white {sizeClasses}"
+	class="inline-flex shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 font-bold text-white shadow-sm {sizeClasses}"
 >
 	{initials}
 </span>

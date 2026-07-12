@@ -13,13 +13,13 @@ export const TICKET_STATUSES: { value: TicketStatus; label: string }[] = [
 ];
 
 export const PRIORITY_COLORS: Record<TicketPriority, string> = {
-	LOW: 'bg-slate-100 text-slate-700',
-	MEDIUM: 'bg-amber-100 text-amber-700',
-	HIGH: 'bg-rose-100 text-rose-700'
+	LOW: 'bg-slate-100 text-slate-600 ring-1 ring-slate-200/60',
+	MEDIUM: 'bg-amber-50 text-amber-700 ring-1 ring-amber-200/60',
+	HIGH: 'bg-rose-50 text-rose-700 ring-1 ring-rose-200/60'
 };
 
 export const STATUS_COLORS: Record<TicketStatus, string> = {
-	OPEN: 'bg-blue-100 text-blue-700',
-	IN_PROGRESS: 'bg-amber-100 text-amber-700',
-	CLOSED: 'bg-emerald-100 text-emerald-700'
+	OPEN: 'bg-indigo-50 text-indigo-700 ring-1 ring-indigo-200/60',
+	IN_PROGRESS: 'bg-amber-50 text-amber-700 ring-1 ring-amber-200/60',
+	CLOSED: 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200/60'
 };
