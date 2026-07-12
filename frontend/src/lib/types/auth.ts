@@ -20,4 +20,5 @@ export interface RegisterPayload {
 
 export interface RefreshResponse {
 	access: string;
+	refresh?: string;
 }
