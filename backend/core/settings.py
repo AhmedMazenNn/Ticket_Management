@@ -285,7 +285,7 @@ if SENTRY_DSN:
             RedisIntegration(),
         ],
         traces_sample_rate=config("SENTRY_TRACES_SAMPLE_RATE", default=0.1, cast=float),
-        send_default_pii=False,
+        send_default_pii=True,
         environment=config("ENVIRONMENT", default="development"),
     )
 
