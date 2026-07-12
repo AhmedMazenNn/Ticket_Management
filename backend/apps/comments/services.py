@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from django.contrib.auth import get_user_model
 
+from apps.notifications.models import Notification
+from apps.notifications.services import create_notification
 from apps.tickets.models import Ticket
 
 from .models import Comment
@@ -16,11 +18,26 @@ def create_comment(
     body: str,
 ) -> Comment:
     """Create a new comment on a ticket."""
-    return Comment.objects.create(
+    comment = Comment.objects.create(
         ticket=ticket,
         author=author,
         body=body,
     )
+
+    recipients = set()
+    if ticket.created_by != author:
+        recipients.add(ticket.created_by)
+    if ticket.assigned_to and ticket.assigned_to != author:
+        recipients.add(ticket.assigned_to)
+
+    for user in recipients:
+        create_notification(
+            ticket=ticket,
+            user=user,
+            type=Notification.Type.COMMENT_ADDED,
+        )
+
+    return comment
 
 
 def update_comment(comment: Comment, **validated_data: dict) -> Comment:
