@@ -12,8 +12,10 @@ Required packages (see requirements.txt):
     sentry-sdk       — error monitoring
 """
 
+from datetime import timedelta
 from pathlib import Path
 
+# pyrefly: ignore [missing-import]
 from decouple import Csv, config
 
 # ---------------------------------------------------------------------------
@@ -30,9 +32,7 @@ SECRET_KEY = config("SECRET_KEY")
 
 DEBUG = config("DEBUG", default=False, cast=bool)
 
-ALLOWED_HOSTS: list[str] = config(
-    "ALLOWED_HOSTS", default="localhost,127.0.0.1", cast=Csv()
-)
+ALLOWED_HOSTS: list[str] = config("ALLOWED_HOSTS", default="localhost,127.0.0.1", cast=Csv())
 
 # ---------------------------------------------------------------------------
 # Application definition
@@ -51,18 +51,22 @@ THIRD_PARTY_APPS = [
     # REST API
     "rest_framework",
     "rest_framework_simplejwt",
+    "rest_framework_simplejwt.token_blacklist",
     "django_filters",
     "drf_spectacular",
     # CORS
     "corsheaders",
-    # Celery integrations
-    "django_celery_beat",
-    "django_celery_results",
-    "django_celery_email",
 ]
 
 # Apps are registered here as they are created during development.
-LOCAL_APPS: list[str] = []
+LOCAL_APPS: list[str] = [
+    "apps.accounts",
+    "apps.tickets",
+    "apps.comments",
+    "apps.audit",
+    "apps.notifications",
+    "apps.messaging",
+]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
 
@@ -72,7 +76,7 @@ INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
-    "corsheaders.middleware.CorsMiddleware",   # must be before CommonMiddleware
+    "corsheaders.middleware.CorsMiddleware",  # must be before CommonMiddleware
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -139,6 +143,8 @@ AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
 ]
 
+AUTH_USER_MODEL = "accounts.User"
+
 # ---------------------------------------------------------------------------
 # Internationalisation
 # ---------------------------------------------------------------------------
@@ -180,6 +186,18 @@ REST_FRAMEWORK = {
 }
 
 # ---------------------------------------------------------------------------
+# Simple JWT
+# ---------------------------------------------------------------------------
+
+SIMPLE_JWT = {
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=30),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
+    "ROTATE_REFRESH_TOKENS": True,
+    "BLACKLIST_AFTER_ROTATION": True,
+    "AUTH_HEADER_TYPES": ("Bearer",),
+}
+
+# ---------------------------------------------------------------------------
 # drf-spectacular — OpenAPI / Swagger docs
 # ---------------------------------------------------------------------------
 
@@ -191,20 +209,17 @@ SPECTACULAR_SETTINGS = {
 }
 
 # ---------------------------------------------------------------------------
-# Celery — RabbitMQ broker + Redis result backend
+# Celery — Redis broker + result backend
 # ---------------------------------------------------------------------------
 
-CELERY_BROKER_URL = config(
-    "CELERY_BROKER_URL", default="amqp://guest:guest@localhost:5672//"
-)
-CELERY_RESULT_BACKEND = config(
-    "CELERY_RESULT_BACKEND", default="redis://localhost:6379/0"
-)
+CELERY_BROKER_URL = config("CELERY_BROKER_URL", default="redis://localhost:6379/0")
+CELERY_RESULT_BACKEND = config("CELERY_RESULT_BACKEND", default="redis://localhost:6379/0")
 CELERY_ACCEPT_CONTENT = ["json"]
+CELERY_TASK_ALWAYS_EAGER = config("CELERY_TASK_ALWAYS_EAGER", default=False, cast=bool)
+CELERY_TASK_EAGER_PROPAGATES = config("CELERY_TASK_EAGER_PROPAGATES", default=False, cast=bool)
 CELERY_TASK_SERIALIZER = "json"
 CELERY_RESULT_SERIALIZER = "json"
 CELERY_TIMEZONE = TIME_ZONE
-CELERY_BEAT_SCHEDULER = "django_celery_beat.schedulers:DatabaseScheduler"
 CELERY_TASK_TRACK_STARTED = True
 CELERY_TASK_TIME_LIMIT = 30 * 60  # 30 minutes hard limit
 
@@ -216,21 +231,14 @@ CACHES = {
     "default": {
         "BACKEND": "django.core.cache.backends.redis.RedisCache",
         "LOCATION": config("REDIS_URL", default="redis://localhost:6379/1"),
-        "OPTIONS": {
-            "CLIENT_CLASS": "django_redis.client.DefaultClient",
-        },
     }
 }
 
 # ---------------------------------------------------------------------------
-# Email (dispatched via Celery)
+# Email
 # ---------------------------------------------------------------------------
 
-EMAIL_BACKEND = "django_celery_email.backends.CeleryEmailBackend"
-CELERY_EMAIL_BACKEND = config(
-    "CELERY_EMAIL_BACKEND",
-    default="django.core.mail.backends.console.EmailBackend",
-)
+EMAIL_BACKEND = config("EMAIL_BACKEND", default="django.core.mail.backends.smtp.EmailBackend")
 DEFAULT_FROM_EMAIL = config("DEFAULT_FROM_EMAIL", default="noreply@ticketapp.local")
 
 EMAIL_HOST = config("EMAIL_HOST", default="localhost")
@@ -257,9 +265,16 @@ CORS_ALLOW_CREDENTIALS = True
 SENTRY_DSN = config("SENTRY_DSN", default="")
 
 if SENTRY_DSN:
+    # pyrefly: ignore [missing-import]
     import sentry_sdk
+
+    # pyrefly: ignore [missing-import]
     from sentry_sdk.integrations.celery import CeleryIntegration
+
+    # pyrefly: ignore [missing-import]
     from sentry_sdk.integrations.django import DjangoIntegration
+
+    # pyrefly: ignore [missing-import]
     from sentry_sdk.integrations.redis import RedisIntegration
 
     sentry_sdk.init(
@@ -270,7 +285,7 @@ if SENTRY_DSN:
             RedisIntegration(),
         ],
         traces_sample_rate=config("SENTRY_TRACES_SAMPLE_RATE", default=0.1, cast=float),
-        send_default_pii=False,
+        send_default_pii=True,
         environment=config("ENVIRONMENT", default="development"),
     )
 

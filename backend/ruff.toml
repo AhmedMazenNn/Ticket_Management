@@ -1,9 +1,8 @@
-[ruff]
 # Same as Black compatible line length
 line-length = 100
 target-version = "py312"
 
-[ruff.lint]
+[lint]
 select = [
     "E",   # pycodestyle errors
     "W",   # pycodestyle warnings
@@ -19,11 +18,10 @@ ignore = [
     "E501", # line too long — handled by formatter
 ]
 
-[ruff.lint.isort]
-known-django = ["django"]
+[lint.isort]
 known-first-party = ["core", "apps"]
-section-order = ["future", "standard-library", "django", "third-party", "first-party", "local-folder"]
+section-order = ["future", "standard-library", "third-party", "first-party", "local-folder"]
 
-[ruff.format]
+[format]
 quote-style = "double"
 indent-style = "space"

@@ -1,6 +1,9 @@
 <script lang="ts">
 	import './layout.css';
 	import favicon from '$lib/assets/favicon.svg';
+	import { initSentry } from '$lib/sentry';
+
+	initSentry();
 
 	let { children } = $props();
 </script>
