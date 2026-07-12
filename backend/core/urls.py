@@ -20,9 +20,15 @@ api_patterns = [
     # path("dashboard/",     include("apps.dashboard.urls")),
 ]
 
+def trigger_error(request):
+    division_by_zero = 1 / 0
+
+
 urlpatterns = [
     # Django admin
     path("admin/", admin.site.urls),
+    # Sentry debug — hit /sentry-debug/ to verify monitoring
+    path("sentry-debug/", trigger_error),
     # OpenAPI schema
     path("api/docs/schema/", SpectacularAPIView.as_view(), name="schema"),
     # Swagger UI

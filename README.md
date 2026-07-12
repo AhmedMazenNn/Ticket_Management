@@ -626,6 +626,77 @@ apps/messaging/
 
 ---
 
+## Sentry — Error & Performance Monitoring
+
+Sentry is integrated into both the backend (Django + Celery + Redis) and frontend (SvelteKit).
+
+### Backend Configuration
+
+Already configured in `core/settings.py`. If `SENTRY_DSN` is set, Sentry auto-initializes with:
+
+- `DjangoIntegration` — captures Django exceptions and HTTP requests
+- `CeleryIntegration` — captures Celery task exceptions
+- `RedisIntegration` — traces Redis operations
+
+### Frontend Configuration
+
+Initialized in `src/lib/sentry.ts`, called from the root `+layout.svelte`. If `PUBLIC_SENTRY_DSN` is set, Sentry captures:
+
+- Unhandled errors
+- Unhandled promise rejections
+- Runtime exceptions in components
+
+### Environment Variables
+
+**Backend** (`backend/.env`):
+
+```env
+SENTRY_DSN=your_dsn_here
+SENTRY_TRACES_SAMPLE_RATE=0.1
+ENVIRONMENT=development
+```
+
+**Frontend** (`frontend/.env`):
+
+```env
+PUBLIC_SENTRY_DSN=your_dsn_here
+PUBLIC_SENTRY_ENVIRONMENT=development
+```
+
+If `SENTRY_DSN` / `PUBLIC_SENTRY_DSN` is empty, Sentry is disabled and the app works normally.
+
+### How to Verify
+
+**Backend:**
+
+1. Set `SENTRY_DSN` in `backend/.env` to your real DSN
+2. Run the dev server: `python manage.py runserver`
+3. Open [http://localhost:8000/sentry-debug/](http://localhost:8000/sentry-debug/) — a `ZeroDivisionError` will be sent to Sentry
+
+**Frontend:**
+
+1. Set `PUBLIC_SENTRY_DSN` to a real Sentry DSN in `frontend/.env`
+2. Run `npm run dev`
+3. Open the app in a browser
+4. Check your Sentry dashboard — a new session should appear
+
+To test error capture, temporarily add this to any component:
+
+```svelte
+<button onclick={() => { throw new Error('Test Sentry error'); }}>
+  Throw Error
+</button>
+```
+
+### Packages
+
+| Package | Location | Purpose |
+|---|---|---|
+| `sentry-sdk==2.30.0` | Backend (`requirements.txt`) | Django + Celery + Redis integration |
+| `@sentry/sveltekit` | Frontend (`package.json`) | Browser error tracking |
+
+---
+
 ## Assumptions & Notes
 
 - JWT is used for API authentication.
