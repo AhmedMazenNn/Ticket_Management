@@ -103,6 +103,30 @@ class TestTicketCreate:
         response = manager_client.post("/api/tickets/", data, format="json")
         assert response.status_code == status.HTTP_400_BAD_REQUEST
 
+    def test_admin_can_assign_ticket_to_self(self, admin_client, admin_user):
+        data = {"title": "Self-assigned", "assigned_to": str(admin_user.id)}
+        response = admin_client.post("/api/tickets/", data, format="json")
+        assert response.status_code == status.HTTP_201_CREATED
+        assert response.data["assigned_to"]["id"] == str(admin_user.id)
+
+    def test_manager_can_assign_ticket_to_self(self, manager_client, manager):
+        data = {"title": "Self-assigned", "assigned_to": str(manager.id)}
+        response = manager_client.post("/api/tickets/", data, format="json")
+        assert response.status_code == status.HTTP_201_CREATED
+        assert response.data["assigned_to"]["id"] == str(manager.id)
+
+    def test_admin_cannot_assign_to_other_admin(self, admin_client):
+        other_admin = AdminUserFactory()
+        data = {"title": "Bad", "assigned_to": str(other_admin.id)}
+        response = admin_client.post("/api/tickets/", data, format="json")
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+    def test_manager_cannot_assign_to_other_manager(self, manager_client):
+        other_manager = UserFactory(role=User.Role.MANAGER)
+        data = {"title": "Bad", "assigned_to": str(other_manager.id)}
+        response = manager_client.post("/api/tickets/", data, format="json")
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+
 
 # ---------------------------------------------------------------------------
 # Ticket Retrieve
