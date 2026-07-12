@@ -1,6 +1,8 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { api } from '$lib/api/client';
+	import { parseApiError } from '$lib/api/errors';
+	import FieldError from '$lib/components/ui/FieldError.svelte';
 
 	let firstName = $state('');
 	let lastName = $state('');
@@ -10,22 +12,27 @@
 	let showPassword = $state(false);
 	let loading = $state(false);
 	let error = $state('');
+	let fieldErrors = $state<Record<string, string>>({});
 
 	async function handleSubmit(e: Event) {
 		e.preventDefault();
-		if (password !== confirmPassword) {
-			error = 'Passwords do not match.';
-			return;
-		}
-		loading = true;
 		error = '';
+		fieldErrors = {};
+
+		if (!email.trim()) fieldErrors.email = 'Email is required.';
+		if (!password) fieldErrors.password = 'Password is required.';
+		else if (password.length < 8) fieldErrors.password = 'Password must be at least 8 characters.';
+		if (password !== confirmPassword) fieldErrors.confirmPassword = 'Passwords do not match.';
+		if (Object.keys(fieldErrors).length > 0) return;
+
+		loading = true;
 		try {
 			await api.register({ email, password, first_name: firstName, last_name: lastName });
 			goto('/dashboard');
 		} catch (err) {
-			const e = err as { detail?: string; email?: string[]; password?: string[] };
-			error =
-				e.detail ?? e.email?.[0] ?? e.password?.[0] ?? 'Registration failed. Please try again.';
+			const parsed = parseApiError(err);
+			error = parsed.message;
+			fieldErrors = parsed.fields;
 		} finally {
 			loading = false;
 		}
@@ -120,9 +127,12 @@
 							type="email"
 							bind:value={email}
 							placeholder="you@company.com"
-							class="h-11 w-full rounded-xl border border-slate-200 pl-10 pr-3 text-sm outline-none transition focus:border-blue-500 focus:ring-3 focus:ring-blue-100"
+							class="h-11 w-full rounded-xl border border-slate-200 pl-10 pr-3 text-sm outline-none transition focus:border-blue-500 focus:ring-3 focus:ring-blue-100 {fieldErrors.email
+								? 'border-rose-300'
+								: ''}"
 						/>
 					</div>
+					<FieldError error={fieldErrors.email} />
 				</label>
 				<label class="block">
 					<span class="mb-1.5 block text-sm font-semibold text-slate-700">Password</span>
@@ -143,7 +153,9 @@
 							bind:value={password}
 							minlength="8"
 							placeholder="At least 8 characters"
-							class="h-11 w-full rounded-xl border border-slate-200 pl-10 pr-11 text-sm outline-none transition focus:border-blue-500 focus:ring-3 focus:ring-blue-100"
+							class="h-11 w-full rounded-xl border border-slate-200 pl-10 pr-11 text-sm outline-none transition focus:border-blue-500 focus:ring-3 focus:ring-blue-100 {fieldErrors.password
+								? 'border-rose-300'
+								: ''}"
 						/>
 						<button
 							type="button"
@@ -180,6 +192,7 @@
 							{/if}
 						</button>
 					</div>
+					<FieldError error={fieldErrors.password} />
 				</label>
 				<label class="block">
 					<span class="mb-1.5 block text-sm font-semibold text-slate-700">Confirm password</span>
@@ -199,9 +212,12 @@
 							bind:value={confirmPassword}
 							minlength="8"
 							placeholder="Repeat your password"
-							class="h-11 w-full rounded-xl border border-slate-200 pl-10 pr-3 text-sm outline-none transition focus:border-blue-500 focus:ring-3 focus:ring-blue-100"
+							class="h-11 w-full rounded-xl border border-slate-200 pl-10 pr-3 text-sm outline-none transition focus:border-blue-500 focus:ring-3 focus:ring-blue-100 {fieldErrors.confirmPassword
+								? 'border-rose-300'
+								: ''}"
 						/>
 					</div>
+					<FieldError error={fieldErrors.confirmPassword} />
 				</label>
 				<button
 					type="submit"

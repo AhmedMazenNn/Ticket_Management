@@ -2,6 +2,7 @@
 	import { goto, invalidateAll } from '$app/navigation';
 	import { page } from '$app/state';
 	import { api } from '$lib/api/client';
+	import { parseApiError } from '$lib/api/errors';
 	import AppShell from '$lib/components/layout/AppShell.svelte';
 	import Avatar from '$lib/components/ui/Avatar.svelte';
 	import Badge from '$lib/components/ui/Badge.svelte';
@@ -26,9 +27,13 @@
 	let assigneeFilter = $derived(data.assigneeFilter);
 
 	let deleteTicket = $state<Ticket | null>(null);
+	let deleteError = $state('');
 
 	function getUserInitials(user: { first_name: string; last_name: string; email: string }): string {
-		return `${user.first_name?.[0] ?? ''}${user.last_name?.[0] ?? ''}`.toUpperCase() || user.email[0].toUpperCase();
+		return (
+			`${user.first_name?.[0] ?? ''}${user.last_name?.[0] ?? ''}`.toUpperCase() ||
+			user.email[0].toUpperCase()
+		);
 	}
 
 	function formatDate(iso: string): string {
@@ -70,12 +75,14 @@
 
 	async function confirmDelete() {
 		if (!deleteTicket) return;
+		deleteError = '';
 		try {
 			await api.deleteTicket(deleteTicket.id);
 			deleteTicket = null;
 			invalidateAll();
-		} catch {
-			deleteTicket = null;
+		} catch (err) {
+			const parsed = parseApiError(err);
+			deleteError = parsed.message;
 		}
 	}
 
@@ -100,7 +107,9 @@
 
 <AppShell title="Tickets" subtitle="Track, prioritize, and resolve work across your organization.">
 	<Card className="overflow-hidden">
-		<div class="flex flex-col gap-3 border-b border-slate-200 p-4 lg:flex-row lg:items-center lg:justify-between">
+		<div
+			class="flex flex-col gap-3 border-b border-slate-200 p-4 lg:flex-row lg:items-center lg:justify-between"
+		>
 			<div class="relative min-w-0 flex-1 lg:max-w-sm">
 				<svg
 					class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"
@@ -140,7 +149,13 @@
 				/>
 				<a href="/tickets/new">
 					<Button>
-						<svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+						<svg
+							class="h-4 w-4"
+							viewBox="0 0 24 24"
+							fill="none"
+							stroke="currentColor"
+							stroke-width="2"
+						>
 							<path d="M12 5v14M5 12h14" />
 						</svg>
 						Create ticket
@@ -149,10 +164,14 @@
 			</div>
 		</div>
 
-		{#if tickets.length === 0}
-			<div class="px-6 py-16 text-center text-sm text-slate-400">
-				No tickets found.
+		{#if deleteError}
+			<div class="mx-4 mt-4 rounded-lg bg-rose-50 px-4 py-3 text-sm text-rose-700">
+				{deleteError}
 			</div>
+		{/if}
+
+		{#if tickets.length === 0}
+			<div class="px-6 py-16 text-center text-sm text-slate-400">No tickets found.</div>
 		{:else}
 			<div class="overflow-x-auto">
 				<table class="min-w-[800px] w-full text-left">
@@ -221,12 +240,23 @@
 										</a>
 										<button
 											type="button"
-											onclick={() => (deleteTicket = ticket)}
+											onclick={() => {
+												deleteTicket = ticket;
+												deleteError = '';
+											}}
 											class="rounded-lg p-1.5 text-slate-400 hover:bg-rose-50 hover:text-rose-600"
 											aria-label="Delete ticket"
 										>
-											<svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-												<path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2" />
+											<svg
+												class="h-4 w-4"
+												viewBox="0 0 24 24"
+												fill="none"
+												stroke="currentColor"
+												stroke-width="1.5"
+											>
+												<path
+													d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"
+												/>
 												<line x1="10" y1="11" x2="10" y2="17" />
 												<line x1="14" y1="11" x2="14" y2="17" />
 											</svg>
@@ -240,7 +270,9 @@
 			</div>
 		{/if}
 
-		<div class="flex flex-col gap-3 border-t border-slate-200 px-5 py-4 text-sm text-slate-500 sm:flex-row sm:items-center sm:justify-between">
+		<div
+			class="flex flex-col gap-3 border-t border-slate-200 px-5 py-4 text-sm text-slate-500 sm:flex-row sm:items-center sm:justify-between"
+		>
 			<span>
 				Showing <b class="text-slate-700">{tickets.length}</b> of {count}
 				tickets

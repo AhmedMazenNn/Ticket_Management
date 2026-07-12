@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { api } from '$lib/api/client';
+	import { parseApiError } from '$lib/api/errors';
 	import { auth } from '$lib/stores/auth.svelte';
 	import AppShell from '$lib/components/layout/AppShell.svelte';
 	import Avatar from '$lib/components/ui/Avatar.svelte';
@@ -20,6 +21,8 @@
 	let loadingComments = $state(true);
 	let historyItems = $state<TicketHistoryEntry[]>([]);
 	let loadingHistory = $state(true);
+	let commentError = $state('');
+	let editError = $state('');
 
 	function getUserInitials(user: { first_name: string; last_name: string; email: string }): string {
 		return (
@@ -68,9 +71,12 @@
 
 	const FIELD_ICONS: Record<string, string> = {
 		created: 'M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6',
-		title: 'M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z',
-		description: 'M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z M14 2v6h6 M16 13H8 M16 17H8 M10 9H8',
-		priority: 'M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z M7 7h.01',
+		title:
+			'M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z',
+		description:
+			'M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z M14 2v6h6 M16 13H8 M16 17H8 M10 9H8',
+		priority:
+			'M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z M7 7h.01',
 		status: 'M20 6L9 17l-5-5',
 		assigned_to: 'M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2 M12 11a4 4 0 100-8 4 4 0 000 8z'
 	};
@@ -97,13 +103,15 @@
 
 	async function submitComment() {
 		if (!commentBody.trim() || submitting) return;
+		commentError = '';
 		submitting = true;
 		try {
 			const newComment = await api.createComment(ticket.id, { body: commentBody.trim() });
 			comments = [newComment, ...comments];
 			commentBody = '';
-		} catch {
-			// silently fail
+		} catch (err) {
+			const parsed = parseApiError(err);
+			commentError = parsed.message;
 		} finally {
 			submitting = false;
 		}
@@ -121,12 +129,14 @@
 
 	async function saveEdit(commentId: string) {
 		if (!editBody.trim()) return;
+		editError = '';
 		try {
 			const updated = await api.updateComment(commentId, { body: editBody.trim() });
 			comments = comments.map((c) => (c.id === commentId ? updated : c));
 			cancelEdit();
-		} catch {
-			// silently fail
+		} catch (err) {
+			const parsed = parseApiError(err);
+			editError = parsed.message;
 		}
 	}
 
@@ -134,8 +144,9 @@
 		try {
 			await api.deleteComment(commentId);
 			comments = comments.filter((c) => c.id !== commentId);
-		} catch {
-			// silently fail
+		} catch (err) {
+			const parsed = parseApiError(err);
+			commentError = parsed.message;
 		}
 	}
 
@@ -213,6 +224,9 @@
 									rows="3"
 									class="block w-full resize-none rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 placeholder-slate-400 transition-colors focus:border-blue-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-100"
 								></textarea>
+								{#if commentError}
+									<p class="mt-2 text-xs text-rose-600">{commentError}</p>
+								{/if}
 								<div class="mt-2 flex justify-end">
 									<button
 										onclick={submitComment}
@@ -312,6 +326,9 @@
 													rows="3"
 													class="block w-full resize-none rounded-xl border border-blue-300 bg-white px-4 py-3 text-sm text-slate-900 focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-100"
 												></textarea>
+												{#if editError}
+													<p class="mt-2 text-xs text-rose-600">{editError}</p>
+												{/if}
 												<div class="mt-2 flex gap-2">
 													<button
 														onclick={() => saveEdit(comment.id)}
@@ -551,7 +568,9 @@
 							<div class="space-y-4">
 								{#each historyItems as entry (entry.id)}
 									<div class="relative flex gap-3">
-										<div class="relative z-10 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white ring-2 ring-slate-100">
+										<div
+											class="relative z-10 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white ring-2 ring-slate-100"
+										>
 											<svg
 												class="h-3.5 w-3.5 text-slate-500"
 												viewBox="0 0 24 24"
@@ -581,7 +600,9 @@
 												<p class="mt-1 text-sm text-slate-500">Created this ticket</p>
 											{:else}
 												<p class="mt-1 text-sm text-slate-500">
-													Changed <span class="font-medium text-slate-600">{FIELD_LABELS[entry.field_name] ?? entry.field_name}</span>
+													Changed <span class="font-medium text-slate-600"
+														>{FIELD_LABELS[entry.field_name] ?? entry.field_name}</span
+													>
 													{#if entry.old_value && entry.new_value}
 														from <span class="font-medium text-slate-600">{entry.old_value}</span>
 														to <span class="font-medium text-slate-600">{entry.new_value}</span>
