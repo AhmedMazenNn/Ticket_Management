@@ -114,9 +114,21 @@ class Command(BaseCommand):
 
         self.stdout.write(self.style.NOTICE("Seeding database...\n"))
 
-        admin = self._create_user("admin@example.com", "Admin", "User", User.Role.ADMIN, password, is_staff=True, is_superuser=True)
-        manager1 = self._create_user("manager@example.com", "Sarah", "Manager", User.Role.MANAGER, password)
-        manager2 = self._create_user("james@example.com", "James", "Hill", User.Role.MANAGER, password)
+        admin = self._create_user(
+            "admin@example.com",
+            "Admin",
+            "User",
+            User.Role.ADMIN,
+            password,
+            is_staff=True,
+            is_superuser=True,
+        )
+        manager1 = self._create_user(
+            "manager@example.com", "Sarah", "Manager", User.Role.MANAGER, password
+        )
+        manager2 = self._create_user(
+            "james@example.com", "James", "Hill", User.Role.MANAGER, password
+        )
 
         agent_specs = [
             ("John", "Agent", "john@example.com"),

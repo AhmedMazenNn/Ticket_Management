@@ -5,26 +5,29 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('notifications', '0001_initial'),
-        ('tickets', '0001_initial'),
+        ("notifications", "0001_initial"),
+        ("tickets", "0001_initial"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='notification',
-            name='sent_at',
+            model_name="notification",
+            name="sent_at",
             field=models.DateTimeField(blank=True, null=True),
         ),
         migrations.AddField(
-            model_name='notification',
-            name='status',
-            field=models.CharField(choices=[('PENDING', 'Pending'), ('SENT', 'Sent'), ('FAILED', 'Failed')], default='PENDING', max_length=10),
+            model_name="notification",
+            name="status",
+            field=models.CharField(
+                choices=[("PENDING", "Pending"), ("SENT", "Sent"), ("FAILED", "Failed")],
+                default="PENDING",
+                max_length=10,
+            ),
         ),
         migrations.AddIndex(
-            model_name='notification',
-            index=models.Index(fields=['status'], name='notificatio_status_d92267_idx'),
+            model_name="notification",
+            index=models.Index(fields=["status"], name="notificatio_status_d92267_idx"),
         ),
     ]

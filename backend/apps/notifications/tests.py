@@ -484,7 +484,8 @@ class TestSendNotificationEmailTask:
         )
 
         with patch(
-            "apps.notifications.tasks.mail.EmailMultiAlternatives", side_effect=Exception("SMTP error")
+            "apps.notifications.tasks.mail.EmailMultiAlternatives",
+            side_effect=Exception("SMTP error"),
         ):
             from apps.notifications.tasks import send_notification_email
 
@@ -591,7 +592,8 @@ class TestNotificationTaskRetry:
         )
 
         with patch(
-            "apps.notifications.tasks.mail.EmailMultiAlternatives", side_effect=Exception("Temporary failure")
+            "apps.notifications.tasks.mail.EmailMultiAlternatives",
+            side_effect=Exception("Temporary failure"),
         ):
             from apps.notifications.tasks import send_notification_email
 

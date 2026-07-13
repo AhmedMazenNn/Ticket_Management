@@ -8,28 +8,63 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
     dependencies = [
-        ('tickets', '0001_initial'),
+        ("tickets", "0001_initial"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='Notification',
+            name="Notification",
             fields=[
-                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
-                ('type', models.CharField(choices=[('TICKET_ASSIGNED', 'Ticket Assigned'), ('STATUS_CHANGED', 'Status Changed'), ('PRIORITY_CHANGED', 'Priority Changed'), ('TICKET_UPDATED', 'Ticket Updated'), ('COMMENT_ADDED', 'Comment Added')], max_length=30)),
-                ('is_read', models.BooleanField(default=False)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('ticket', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='notifications', to='tickets.ticket')),
-                ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='notifications', to=settings.AUTH_USER_MODEL)),
+                (
+                    "id",
+                    models.UUIDField(
+                        default=uuid.uuid4, editable=False, primary_key=True, serialize=False
+                    ),
+                ),
+                (
+                    "type",
+                    models.CharField(
+                        choices=[
+                            ("TICKET_ASSIGNED", "Ticket Assigned"),
+                            ("STATUS_CHANGED", "Status Changed"),
+                            ("PRIORITY_CHANGED", "Priority Changed"),
+                            ("TICKET_UPDATED", "Ticket Updated"),
+                            ("COMMENT_ADDED", "Comment Added"),
+                        ],
+                        max_length=30,
+                    ),
+                ),
+                ("is_read", models.BooleanField(default=False)),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                (
+                    "ticket",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="notifications",
+                        to="tickets.ticket",
+                    ),
+                ),
+                (
+                    "user",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="notifications",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
             options={
-                'ordering': ['-created_at'],
-                'indexes': [models.Index(fields=['ticket'], name='notificatio_ticket__b3c4e8_idx'), models.Index(fields=['user'], name='notificatio_user_id_c291d5_idx'), models.Index(fields=['is_read'], name='notificatio_is_read_9edb86_idx'), models.Index(fields=['created_at'], name='notificatio_created_46ad24_idx')],
+                "ordering": ["-created_at"],
+                "indexes": [
+                    models.Index(fields=["ticket"], name="notificatio_ticket__b3c4e8_idx"),
+                    models.Index(fields=["user"], name="notificatio_user_id_c291d5_idx"),
+                    models.Index(fields=["is_read"], name="notificatio_is_read_9edb86_idx"),
+                    models.Index(fields=["created_at"], name="notificatio_created_46ad24_idx"),
+                ],
             },
         ),
     ]

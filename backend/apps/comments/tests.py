@@ -72,17 +72,13 @@ def agent_ticket(manager, agent):
 class TestCreateComment:
     def test_manager_can_comment_on_any_ticket(self, manager_client, ticket):
         data = {"body": "Manager comment."}
-        response = manager_client.post(
-            f"/api/tickets/{ticket.id}/comments/", data, format="json"
-        )
+        response = manager_client.post(f"/api/tickets/{ticket.id}/comments/", data, format="json")
         assert response.status_code == status.HTTP_201_CREATED
         assert response.data["body"] == "Manager comment."
 
     def test_admin_can_comment_on_any_ticket(self, admin_client, ticket):
         data = {"body": "Admin comment."}
-        response = admin_client.post(
-            f"/api/tickets/{ticket.id}/comments/", data, format="json"
-        )
+        response = admin_client.post(f"/api/tickets/{ticket.id}/comments/", data, format="json")
         assert response.status_code == status.HTTP_201_CREATED
 
     def test_agent_can_comment_on_assigned_ticket(self, agent_client, agent_ticket):
@@ -94,44 +90,32 @@ class TestCreateComment:
 
     def test_agent_cannot_comment_on_unassigned_ticket(self, agent_client, ticket):
         data = {"body": "Unauthorized comment."}
-        response = agent_client.post(
-            f"/api/tickets/{ticket.id}/comments/", data, format="json"
-        )
+        response = agent_client.post(f"/api/tickets/{ticket.id}/comments/", data, format="json")
         assert response.status_code == status.HTTP_403_FORBIDDEN
 
     def test_create_comment_empty_body(self, manager_client, ticket):
         data = {"body": ""}
-        response = manager_client.post(
-            f"/api/tickets/{ticket.id}/comments/", data, format="json"
-        )
+        response = manager_client.post(f"/api/tickets/{ticket.id}/comments/", data, format="json")
         assert response.status_code == status.HTTP_400_BAD_REQUEST
 
     def test_create_comment_whitespace_only_body(self, manager_client, ticket):
         data = {"body": "   "}
-        response = manager_client.post(
-            f"/api/tickets/{ticket.id}/comments/", data, format="json"
-        )
+        response = manager_client.post(f"/api/tickets/{ticket.id}/comments/", data, format="json")
         assert response.status_code == status.HTTP_400_BAD_REQUEST
 
     def test_create_comment_missing_body(self, manager_client, ticket):
-        response = manager_client.post(
-            f"/api/tickets/{ticket.id}/comments/", {}, format="json"
-        )
+        response = manager_client.post(f"/api/tickets/{ticket.id}/comments/", {}, format="json")
         assert response.status_code == status.HTTP_400_BAD_REQUEST
 
     def test_create_comment_ticket_not_found(self, manager_client):
         fake_id = uuid.uuid4()
         data = {"body": "Not found."}
-        response = manager_client.post(
-            f"/api/tickets/{fake_id}/comments/", data, format="json"
-        )
+        response = manager_client.post(f"/api/tickets/{fake_id}/comments/", data, format="json")
         assert response.status_code == status.HTTP_404_NOT_FOUND
 
     def test_create_comment_unauthenticated(self, api_client, ticket):
         data = {"body": "Unauthenticated."}
-        response = api_client.post(
-            f"/api/tickets/{ticket.id}/comments/", data, format="json"
-        )
+        response = api_client.post(f"/api/tickets/{ticket.id}/comments/", data, format="json")
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
 
@@ -180,52 +164,40 @@ class TestUpdateComment:
     def test_update_own_comment(self, manager_client, ticket, manager):
         comment = CommentFactory(ticket=ticket, author=manager, body="Original.")
         data = {"body": "Updated."}
-        response = manager_client.put(
-            f"/api/comments/{comment.id}/", data, format="json"
-        )
+        response = manager_client.put(f"/api/comments/{comment.id}/", data, format="json")
         assert response.status_code == status.HTTP_200_OK
         assert response.data["body"] == "Updated."
 
     def test_update_comment_empty_body(self, manager_client, ticket, manager):
         comment = CommentFactory(ticket=ticket, author=manager, body="Original.")
         data = {"body": ""}
-        response = manager_client.put(
-            f"/api/comments/{comment.id}/", data, format="json"
-        )
+        response = manager_client.put(f"/api/comments/{comment.id}/", data, format="json")
         assert response.status_code == status.HTTP_400_BAD_REQUEST
 
     def test_update_another_users_comment(self, manager_client, ticket):
         other = UserFactory()
         comment = CommentFactory(ticket=ticket, author=other, body="Not yours.")
         data = {"body": "Trying to edit."}
-        response = manager_client.put(
-            f"/api/comments/{comment.id}/", data, format="json"
-        )
+        response = manager_client.put(f"/api/comments/{comment.id}/", data, format="json")
         assert response.status_code == status.HTTP_403_FORBIDDEN
 
     def test_update_comment_not_found(self, manager_client):
         fake_id = uuid.uuid4()
         data = {"body": "Updated."}
-        response = manager_client.put(
-            f"/api/comments/{fake_id}/", data, format="json"
-        )
+        response = manager_client.put(f"/api/comments/{fake_id}/", data, format="json")
         assert response.status_code == status.HTTP_404_NOT_FOUND
 
     def test_update_comment_unauthenticated(self, api_client, ticket):
         comment = CommentFactory(ticket=ticket, body="Original.")
         data = {"body": "Updated."}
-        response = api_client.put(
-            f"/api/comments/{comment.id}/", data, format="json"
-        )
+        response = api_client.put(f"/api/comments/{comment.id}/", data, format="json")
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
     def test_admin_can_update_any_comment(self, admin_client, ticket):
         other = UserFactory()
         comment = CommentFactory(ticket=ticket, author=other, body="Admin edit.")
         data = {"body": "Admin updated."}
-        response = admin_client.put(
-            f"/api/comments/{comment.id}/", data, format="json"
-        )
+        response = admin_client.put(f"/api/comments/{comment.id}/", data, format="json")
         assert response.status_code == status.HTTP_200_OK
         assert response.data["body"] == "Admin updated."
 

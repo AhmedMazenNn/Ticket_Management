@@ -30,7 +30,9 @@ class Notification(models.Model):
     )
     type = models.CharField(max_length=30, choices=Type.choices)
     status = models.CharField(
-        max_length=10, choices=Status.choices, default=Status.PENDING,
+        max_length=10,
+        choices=Status.choices,
+        default=Status.PENDING,
     )
     is_read = models.BooleanField(default=False)
     sent_at = models.DateTimeField(null=True, blank=True)
