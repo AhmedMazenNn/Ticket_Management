@@ -21,8 +21,13 @@ from .serializers import (
 )
 from .services import create_ticket, delete_ticket, update_ticket
 
-DASHBOARD_STATS_KEY = "dashboard_stats"
 DASHBOARD_STATS_TIMEOUT = 300  # 5 minutes
+
+
+def _dashboard_cache_key(user):
+    if user.role == User.Role.AGENT:
+        return f"dashboard_stats_agent_{user.id}"
+    return "dashboard_stats"
 
 
 @extend_schema(tags=["Tickets"])
@@ -118,7 +123,8 @@ class DashboardStatsView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request: Request) -> Response:
-        cached = cache.get(DASHBOARD_STATS_KEY)
+        cache_key = _dashboard_cache_key(request.user)
+        cached = cache.get(cache_key)
         if cached:
             return Response(cached)
 
@@ -147,7 +153,7 @@ class DashboardStatsView(APIView):
                 "high": qs.filter(priority=Ticket.Priority.HIGH).count(),
             },
         }
-        cache.set(DASHBOARD_STATS_KEY, response_data, timeout=DASHBOARD_STATS_TIMEOUT)
+        cache.set(cache_key, response_data, timeout=DASHBOARD_STATS_TIMEOUT)
         return Response(response_data)
 
 

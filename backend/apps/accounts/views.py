@@ -8,7 +8,15 @@ from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenRefreshView as BaseTokenRefreshView
 
-from .serializers import LoginSerializer, RegisterSerializer, UserSerializer
+from .permissions import IsAdmin
+from .serializers import (
+    AdminUserUpdateSerializer,
+    ChangePasswordSerializer,
+    LoginSerializer,
+    ProfileUpdateSerializer,
+    RegisterSerializer,
+    UserSerializer,
+)
 from .services import authenticate_user
 
 User = get_user_model()
@@ -100,10 +108,33 @@ class LogoutView(APIView):
 @extend_schema(tags=["Users"])
 class CurrentUserView(generics.RetrieveUpdateAPIView):
     permission_classes = [IsAuthenticated]
-    serializer_class = UserSerializer
+    serializer_class = ProfileUpdateSerializer
+
+    def get_serializer_class(self):
+        if self.request.method in ("PUT", "PATCH"):
+            return ProfileUpdateSerializer
+        return UserSerializer
 
     def get_object(self):
         return self.request.user
+
+
+@extend_schema(tags=["Users"])
+class ChangePasswordView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request: Request) -> Response:
+        serializer = ChangePasswordSerializer(data=request.data, context={"request": request})
+        serializer.is_valid(raise_exception=True)
+
+        user = request.user
+        user.set_password(serializer.validated_data["new_password"])
+        user.save(update_fields=["password"])
+
+        return Response(
+            {"detail": "Password changed successfully."},
+            status=status.HTTP_200_OK,
+        )
 
 
 @extend_schema(tags=["Users"])
@@ -111,6 +142,22 @@ class UserListView(generics.ListAPIView):
     permission_classes = [IsAuthenticated]
     serializer_class = UserSerializer
     queryset = User.objects.filter(is_active=True)
+    pagination_class = None
+
+
+@extend_schema(tags=["Users"])
+class AdminUserDetailView(generics.RetrieveUpdateAPIView):
+    permission_classes = [IsAdmin]
+    serializer_class = AdminUserUpdateSerializer
+    queryset = User.objects.all()
+    lookup_field = "pk"
+
+
+@extend_schema(tags=["Users"])
+class AdminUserListView(generics.ListAPIView):
+    permission_classes = [IsAdmin]
+    serializer_class = UserSerializer
+    queryset = User.objects.all()
     pagination_class = None
 
 

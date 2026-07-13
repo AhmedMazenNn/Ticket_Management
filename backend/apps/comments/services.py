@@ -37,6 +37,7 @@ def create_comment(
             ticket=ticket,
             user=user,
             type=Notification.Type.COMMENT_ADDED,
+            triggered_by=author,
         )
 
     publish_event(

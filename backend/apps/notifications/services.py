@@ -15,6 +15,7 @@ def create_notification(
     ticket: Ticket,
     user: User,
     type: str,
+    triggered_by: User | None = None,
 ) -> Notification:
     """Create an in-app notification and enqueue email.
 
@@ -22,9 +23,10 @@ def create_notification(
         ticket: The ticket this notification is about.
         user: The user who should receive this notification.
         type: One of Notification.Type values.
+        triggered_by: The user who caused this notification.
 
     Returns:
-        The created Notification instance.
+        the created Notification instance.
     """
     notification = Notification.objects.create(
         ticket=ticket,
@@ -34,10 +36,19 @@ def create_notification(
 
     send_notification_email.delay(
         notification_id=str(notification.id),
+        recipient_name=user.first_name or user.email.split("@")[0],
         recipient_email=user.email,
         notification_type=type,
         ticket_id=str(ticket.id),
         ticket_title=ticket.title,
+        ticket_priority=ticket.priority,
+        ticket_status=ticket.status,
+        triggered_by_name=(
+            f"{triggered_by.first_name} {triggered_by.last_name}".strip()
+            if triggered_by
+            else ""
+        ),
+        description=ticket.description[:300] if ticket.description else "",
     )
 
     return notification
