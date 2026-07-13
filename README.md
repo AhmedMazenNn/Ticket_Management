@@ -13,6 +13,71 @@ This application allows teams to manage support tickets through a role-based sys
 - **JWT authentication** — Secure API access with token-based auth
 - **API documentation** — Interactive Swagger UI and ReDoc for API exploration
 
+## Roles & Permissions
+
+The application has three roles with distinct access levels:
+
+### Admin
+
+Full access to everything. Admins oversee the entire system.
+
+| Action | Allowed |
+|---|---|
+| View all tickets | Yes |
+| Create tickets | Yes |
+| Edit any ticket (all fields) | Yes |
+| Delete any ticket | Yes |
+| Assign tickets to agents | Yes |
+| Edit/delete any comment | Yes |
+| View history for any ticket | Yes |
+| View dashboard stats (all tickets) | Yes |
+| Access Django admin panel (`/admin/`) | Yes |
+
+### Manager
+
+Same as Admin for tickets, but cannot edit other users' comments or access the Django admin.
+
+| Action | Allowed |
+|---|---|
+| View all tickets | Yes |
+| Create tickets | Yes |
+| Edit any ticket (all fields) | Yes |
+| Delete any ticket | Yes |
+| Assign tickets to agents | Yes |
+| Edit/delete own comments only | Yes |
+| View history for any ticket | Yes |
+| View dashboard stats (all tickets) | Yes |
+| Access Django admin panel | No |
+
+### Agent
+
+Limited to working on assigned tickets. Can only update the status field.
+
+| Action | Allowed |
+|---|---|
+| View only assigned tickets | Yes |
+| Create tickets | No |
+| Edit assigned tickets (status only) | Yes |
+| Delete tickets | No |
+| Comment on assigned tickets | Yes |
+| Edit/delete own comments | Yes |
+| View history for assigned tickets | Yes |
+| View dashboard stats (own tickets only) | Yes |
+
+### Key Differences at a Glance
+
+| Capability | Admin | Manager | Agent |
+|---|---|---|---|
+| Ticket visibility | All | All | Assigned only |
+| Create tickets | Yes | Yes | No |
+| Edit tickets | All fields, any ticket | All fields, any ticket | Status only, assigned |
+| Delete tickets | Yes | Yes | No |
+| Comments | Edit/delete any | Edit/delete own | Edit/delete own |
+| Dashboard scope | All tickets | All tickets | Assigned only |
+| Django admin | Yes | No | No |
+
+---
+
 ## Tech Stack
 
 | Layer | Technology | Purpose |

@@ -13,8 +13,6 @@ from .models import Ticket
 
 User = get_user_model()
 
-DASHBOARD_STATS_KEY = "dashboard_stats"
-
 TRACKED_FIELDS = {"title", "description", "priority", "status", "assigned_to"}
 
 PRIORITY_LABELS = {
@@ -32,9 +30,11 @@ STATUS_LABELS = {
 
 def _invalidate_ticket_caches(*, creator_id, assignee_id=None):
     """Invalidate dashboard cache keys after ticket mutations."""
-    cache.delete(DASHBOARD_STATS_KEY)
+    cache.delete("dashboard_stats")
+    cache.delete(f"dashboard_stats_agent_{creator_id}")
     cache.delete(f"my_stats_{creator_id}")
     if assignee_id and assignee_id != creator_id:
+        cache.delete(f"dashboard_stats_agent_{assignee_id}")
         cache.delete(f"my_stats_{assignee_id}")
 
 
@@ -79,6 +79,7 @@ def create_ticket(
             ticket=ticket,
             user=assigned_to,
             type=Notification.Type.TICKET_ASSIGNED,
+            triggered_by=created_by,
         )
     _invalidate_ticket_caches(
         creator_id=created_by.id,
@@ -199,6 +200,7 @@ def _notify_ticket_update(*, ticket: Ticket, changed_by: User, changes: list[tup
                     ticket=ticket,
                     user=user,
                     type=notif_type,
+                    triggered_by=changed_by,
                 )
 
 
@@ -225,14 +227,16 @@ def assign_ticket(ticket: Ticket, user: User | None, *, changed_by: User) -> Tic
                 ticket=ticket,
                 user=user,
                 type=Notification.Type.TICKET_ASSIGNED,
+                triggered_by=changed_by,
             )
         affected_ids = {changed_by.id, ticket.created_by_id}
         if old_assignee:
             affected_ids.add(old_assignee.id)
         if user:
             affected_ids.add(user.id)
-        cache.delete(DASHBOARD_STATS_KEY)
+        cache.delete("dashboard_stats")
         for uid in affected_ids:
+            cache.delete(f"dashboard_stats_agent_{uid}")
             cache.delete(f"my_stats_{uid}")
         publish_event(
             RoutingKey.TICKET_ASSIGNED,
