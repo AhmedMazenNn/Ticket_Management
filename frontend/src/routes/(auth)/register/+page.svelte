@@ -22,8 +22,7 @@
 		if (!email.trim()) fieldErrors.email = 'Email is required.';
 		if (!password) fieldErrors.password = 'Password is required.';
 		else if (password.length < 8) fieldErrors.password = 'Password must be at least 8 characters.';
-		if (password !== confirmPassword)
-			fieldErrors.confirmPassword = 'Passwords do not match.';
+		if (password !== confirmPassword) fieldErrors.confirmPassword = 'Passwords do not match.';
 		if (Object.keys(fieldErrors).length > 0) return;
 
 		loading = true;
@@ -165,14 +164,28 @@
 							aria-label={showPassword ? 'Hide password' : 'Show password'}
 						>
 							{#if showPassword}
-								<svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-									<path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94" />
+								<svg
+									class="h-4 w-4"
+									viewBox="0 0 24 24"
+									fill="none"
+									stroke="currentColor"
+									stroke-width="1.5"
+								>
+									<path
+										d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94"
+									/>
 									<path d="M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19" />
 									<path d="M1 1l22 22" />
 									<path d="M14.12 14.12A3 3 0 019.88 9.88" />
 								</svg>
 							{:else}
-								<svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+								<svg
+									class="h-4 w-4"
+									viewBox="0 0 24 24"
+									fill="none"
+									stroke="currentColor"
+									stroke-width="1.5"
+								>
 									<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
 									<circle cx="12" cy="12" r="3" />
 								</svg>
@@ -213,12 +226,29 @@
 				>
 					{#if loading}
 						<svg class="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
-							<circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
-							<path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+							<circle
+								class="opacity-25"
+								cx="12"
+								cy="12"
+								r="10"
+								stroke="currentColor"
+								stroke-width="4"
+							/>
+							<path
+								class="opacity-75"
+								fill="currentColor"
+								d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+							/>
 						</svg>
 					{:else}
 						Create account
-						<svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+						<svg
+							class="h-4 w-4"
+							viewBox="0 0 24 24"
+							fill="none"
+							stroke="currentColor"
+							stroke-width="2"
+						>
 							<path d="M5 12h14M12 5l7 7-7 7" />
 						</svg>
 					{/if}
@@ -291,15 +321,33 @@
 			</p>
 			<div class="mt-6 flex gap-5 text-sm text-slate-300">
 				<span class="flex items-center gap-1.5">
-					<svg class="h-4 w-4 text-indigo-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5" /></svg>
+					<svg
+						class="h-4 w-4 text-indigo-400"
+						viewBox="0 0 24 24"
+						fill="none"
+						stroke="currentColor"
+						stroke-width="2"><path d="M20 6L9 17l-5-5" /></svg
+					>
 					Unified context
 				</span>
 				<span class="flex items-center gap-1.5">
-					<svg class="h-4 w-4 text-indigo-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5" /></svg>
+					<svg
+						class="h-4 w-4 text-indigo-400"
+						viewBox="0 0 24 24"
+						fill="none"
+						stroke="currentColor"
+						stroke-width="2"><path d="M20 6L9 17l-5-5" /></svg
+					>
 					Clear ownership
 				</span>
 				<span class="flex items-center gap-1.5">
-					<svg class="h-4 w-4 text-indigo-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5" /></svg>
+					<svg
+						class="h-4 w-4 text-indigo-400"
+						viewBox="0 0 24 24"
+						fill="none"
+						stroke="currentColor"
+						stroke-width="2"><path d="M20 6L9 17l-5-5" /></svg
+					>
 					Faster resolution
 				</span>
 			</div>

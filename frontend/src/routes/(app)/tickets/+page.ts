@@ -19,7 +19,16 @@ export const load: PageLoad = async ({ url, fetch }) => {
 	if (assigneeFilter !== 'all') params.set('assigned_to', assigneeFilter);
 
 	if (!access) {
-		return { tickets: [], count: 0, users: [], page, search, statusFilter, priorityFilter, assigneeFilter };
+		return {
+			tickets: [],
+			count: 0,
+			users: [],
+			page,
+			search,
+			statusFilter,
+			priorityFilter,
+			assigneeFilter
+		};
 	}
 
 	const headers = {
@@ -34,7 +43,16 @@ export const load: PageLoad = async ({ url, fetch }) => {
 		]);
 
 		if (!ticketsRes.ok || !usersRes.ok) {
-			return { tickets: [], count: 0, users: [], page, search, statusFilter, priorityFilter, assigneeFilter };
+			return {
+				tickets: [],
+				count: 0,
+				users: [],
+				page,
+				search,
+				statusFilter,
+				priorityFilter,
+				assigneeFilter
+			};
 		}
 
 		const ticketResponse = await ticketsRes.json();
@@ -51,6 +69,15 @@ export const load: PageLoad = async ({ url, fetch }) => {
 			assigneeFilter
 		};
 	} catch {
-		return { tickets: [], count: 0, users: [], page, search, statusFilter, priorityFilter, assigneeFilter };
+		return {
+			tickets: [],
+			count: 0,
+			users: [],
+			page,
+			search,
+			statusFilter,
+			priorityFilter,
+			assigneeFilter
+		};
 	}
 };

@@ -7,9 +7,7 @@
 		size?: 'sm' | 'md';
 	} = $props();
 
-	const sizeClasses = $derived(
-		size === 'md' ? 'h-9 w-9 text-xs' : 'h-7 w-7 text-[10px]'
-	);
+	const sizeClasses = $derived(size === 'md' ? 'h-9 w-9 text-xs' : 'h-7 w-7 text-[10px]');
 </script>
 
 <span

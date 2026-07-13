@@ -13,6 +13,30 @@ This application allows teams to manage support tickets through a role-based sys
 - **JWT authentication** — Secure API access with token-based auth
 - **API documentation** — Interactive Swagger UI and ReDoc for API exploration
 
+## Screenshots
+
+### Login
+
+![Login](./images/Login.png)
+
+### Dashboard
+
+![Dashboard](./images/Dashboard.png)
+
+### Tickets
+
+![Tickets](./images/Tickets.png)
+
+### Create Ticket
+
+![Create Ticket](./images/CreateTicket.png)
+
+### Email Notification
+
+![Email Notification](./images/Email.png)
+
+---
+
 ## Roles & Permissions
 
 The application has three roles with distinct access levels:
@@ -422,6 +446,12 @@ Run `make help` to see all available commands:
 ---
 
 ## Email Notifications (Gmail SMTP)
+
+### Email Preview
+
+![Email Notification](./images/Email.png)
+
+Emails are styled HTML with ticket details, priority/status badges, and a direct link to the ticket.
 
 ### Environment Variables
 

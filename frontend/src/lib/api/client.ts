@@ -148,7 +148,9 @@ export class ApiClient {
 		return data;
 	}
 
-	async updateProfile(payload: Partial<Pick<User, 'first_name' | 'last_name' | 'email'>>): Promise<User> {
+	async updateProfile(
+		payload: Partial<Pick<User, 'first_name' | 'last_name' | 'email'>>
+	): Promise<User> {
 		const data = await this.request<User>('/auth/me/', {
 			method: 'PATCH',
 			body: JSON.stringify(payload)
@@ -179,7 +181,10 @@ export class ApiClient {
 		return this.request<User>(`/auth/admin/users/${id}/`);
 	}
 
-	async adminUpdateUser(id: string, payload: Partial<Pick<User, 'first_name' | 'last_name' | 'email' | 'role' | 'is_active'>>): Promise<User> {
+	async adminUpdateUser(
+		id: string,
+		payload: Partial<Pick<User, 'first_name' | 'last_name' | 'email' | 'role' | 'is_active'>>
+	): Promise<User> {
 		return this.request<User>(`/auth/admin/users/${id}/`, {
 			method: 'PATCH',
 			body: JSON.stringify(payload)

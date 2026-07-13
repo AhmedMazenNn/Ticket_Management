@@ -44,14 +44,7 @@
 		const ctx = canvas.getContext('2d');
 		if (!ctx) return;
 
-		const defaultColors = [
-			'#3b82f6',
-			'#f59e0b',
-			'#10b981',
-			'#ef4444',
-			'#8b5cf6',
-			'#06b6d4'
-		];
+		const defaultColors = ['#3b82f6', '#f59e0b', '#10b981', '#ef4444', '#8b5cf6', '#06b6d4'];
 		const bgColors = colors.length ? colors : defaultColors;
 
 		if (type === 'doughnut') {

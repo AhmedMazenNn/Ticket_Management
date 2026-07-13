@@ -57,9 +57,7 @@
 					type="button"
 					onclick={() => goToPage(p as number)}
 					class="rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors
-						{p === current
-						? 'bg-primary-50 text-primary-700'
-						: 'text-surface-500 hover:bg-surface-100'}"
+						{p === current ? 'bg-primary-50 text-primary-700' : 'text-surface-500 hover:bg-surface-100'}"
 				>
 					{p}
 				</button>
