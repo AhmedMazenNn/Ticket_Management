@@ -59,7 +59,11 @@
 	<div class="flex min-h-screen items-center justify-center bg-surface-50">
 		<svg class="h-8 w-8 animate-spin text-primary-600" viewBox="0 0 24 24" fill="none">
 			<circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
-			<path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+			<path
+				class="opacity-75"
+				fill="currentColor"
+				d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+			/>
 		</svg>
 	</div>
 {:else}
@@ -69,89 +73,142 @@
 			<div class="relative px-4 pb-5 sm:px-6 sm:pb-6">
 				<div class="-mt-10 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
 					<div class="flex items-end gap-3 sm:gap-4">
-						<span class="grid h-16 w-16 shrink-0 place-items-center rounded-full bg-gradient-to-br from-primary-500 to-purple-600 text-lg font-bold text-white ring-4 ring-white shadow-lg sm:h-20 sm:w-20 sm:text-xl">
+						<span
+							class="grid h-16 w-16 shrink-0 place-items-center rounded-full bg-gradient-to-br from-primary-500 to-purple-600 text-lg font-bold text-white ring-4 ring-white shadow-lg sm:h-20 sm:w-20 sm:text-xl"
+						>
 							{initials}
 						</span>
 						<div class="pb-1">
-							<h2 class="text-lg font-bold text-surface-950 sm:text-xl">
-								{user.first_name} {user.last_name}
-							</h2>
-							<p class="text-xs text-surface-500 sm:text-sm">{user.role}</p>
+							<div class="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+								<h2
+									class="text-xl mt-45px font-extrabold tracking-tight text-surface-950 sm:text-2xl"
+								>
+									{user.first_name}
+									{user.last_name}
+								</h2>
+								<span
+									class="inline-flex items-center rounded-full bg-primary-50 px-2.5 py-0.5 text-xs font-semibold text-primary-700 ring-1 ring-inset ring-primary-200"
+								>
+									{user.role}
+								</span>
+							</div>
 						</div>
 					</div>
-					<span class="mb-1 shrink-0 rounded-full px-3 py-1 text-xs font-semibold self-start sm:self-auto {user.is_active ? 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200' : 'bg-rose-50 text-rose-700 ring-1 ring-rose-200'}">
+					<span
+						class="mb-1 shrink-0 rounded-full px-3 py-1 text-xs font-semibold self-start sm:self-auto {user.is_active
+							? 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200'
+							: 'bg-rose-50 text-rose-700 ring-1 ring-rose-200'}"
+					>
 						{user.is_active ? 'Active' : 'Inactive'}
 					</span>
 				</div>
-				<div class="mt-4 flex flex-col gap-1.5 text-sm text-surface-500 sm:mt-6 sm:flex-row sm:flex-wrap sm:gap-x-6 sm:gap-y-2">
+				<div
+					class="mt-4 flex flex-col gap-1.5 text-sm text-surface-500 sm:mt-6 sm:flex-row sm:flex-wrap sm:gap-x-6 sm:gap-y-2"
+				>
 					<span class="flex items-center gap-2">
-						<svg class="h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+						<svg
+							class="h-4 w-4 shrink-0"
+							viewBox="0 0 24 24"
+							fill="none"
+							stroke="currentColor"
+							stroke-width="1.5"
+						>
 							<rect x="2" y="4" width="20" height="16" rx="2" />
 							<path d="M22 7l-10 6L2 7" />
 						</svg>
 						<span class="break-all">{user.email}</span>
-					</span>
-					<span class="flex items-center gap-2">
-						<svg class="h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-							<path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" />
-							<circle cx="12" cy="7" r="4" />
-						</svg>
-						{user.role}
 					</span>
 				</div>
 			</div>
 		</div>
 
 		<div class="mt-4 grid grid-cols-1 gap-3 sm:mt-6 sm:grid-cols-3 sm:gap-4">
-			<div class="stat-card stat-card-blue rounded-xl border border-surface-200 bg-white p-4 sm:p-5 shadow-sm">
+			<div
+				class="stat-card stat-card-blue rounded-xl border border-surface-200 bg-white p-4 sm:p-5 shadow-sm"
+			>
 				<div class="flex items-center justify-between">
 					<span class="rounded-lg bg-primary-50 p-2 sm:p-2.5 text-primary-600">
-						<svg class="h-4 w-4 sm:h-5 sm:w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+						<svg
+							class="h-4 w-4 sm:h-5 sm:w-5"
+							viewBox="0 0 24 24"
+							fill="none"
+							stroke="currentColor"
+							stroke-width="1.5"
+						>
 							<path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2" />
 							<rect x="9" y="3" width="6" height="4" rx="1" />
 						</svg>
 					</span>
 					<span class="text-xs font-medium text-surface-400">Assigned</span>
 				</div>
-				<p class="mt-4 text-2xl font-bold tracking-tight text-surface-950 sm:mt-5">{assignedTotal}</p>
+				<p class="mt-4 text-2xl font-bold tracking-tight text-surface-950 sm:mt-5">
+					{assignedTotal}
+				</p>
 				<p class="mt-1 text-sm text-surface-500">Assigned tickets</p>
 			</div>
-			<div class="stat-card stat-card-emerald rounded-xl border border-surface-200 bg-white p-4 sm:p-5 shadow-sm">
+			<div
+				class="stat-card stat-card-emerald rounded-xl border border-surface-200 bg-white p-4 sm:p-5 shadow-sm"
+			>
 				<div class="flex items-center justify-between">
 					<span class="rounded-lg bg-emerald-50 p-2 sm:p-2.5 text-emerald-600">
-						<svg class="h-4 w-4 sm:h-5 sm:w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+						<svg
+							class="h-4 w-4 sm:h-5 sm:w-5"
+							viewBox="0 0 24 24"
+							fill="none"
+							stroke="currentColor"
+							stroke-width="1.5"
+						>
 							<path d="M22 11.08V12a10 10 0 11-5.93-9.14" />
 							<path d="M22 4L12 14.01l-3-3" />
 						</svg>
 					</span>
 					<span class="text-xs font-medium text-surface-400">Completed</span>
 				</div>
-				<p class="mt-4 text-2xl font-bold tracking-tight text-surface-950 sm:mt-5">{assignedClosed}</p>
+				<p class="mt-4 text-2xl font-bold tracking-tight text-surface-950 sm:mt-5">
+					{assignedClosed}
+				</p>
 				<p class="mt-1 text-sm text-surface-500">Closed tickets</p>
 			</div>
-			<div class="stat-card stat-card-amber rounded-xl border border-surface-200 bg-white p-4 sm:p-5 shadow-sm">
+			<div
+				class="stat-card stat-card-amber rounded-xl border border-surface-200 bg-white p-4 sm:p-5 shadow-sm"
+			>
 				<div class="flex items-center justify-between">
 					<span class="rounded-lg bg-amber-50 p-2 sm:p-2.5 text-amber-600">
-						<svg class="h-4 w-4 sm:h-5 sm:w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-							<path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" />
+						<svg
+							class="h-4 w-4 sm:h-5 sm:w-5"
+							viewBox="0 0 24 24"
+							fill="none"
+							stroke="currentColor"
+							stroke-width="1.5"
+						>
+							<path
+								d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"
+							/>
 						</svg>
 					</span>
 					<span class="text-xs font-medium text-surface-400">Open</span>
 				</div>
-				<p class="mt-4 text-2xl font-bold tracking-tight text-surface-950 sm:mt-5">{assignedOpen}</p>
+				<p class="mt-4 text-2xl font-bold tracking-tight text-surface-950 sm:mt-5">
+					{assignedOpen}
+				</p>
 				<p class="mt-1 text-sm text-surface-500">Open tickets</p>
 			</div>
 		</div>
 
 		<div class="mt-4 grid gap-4 sm:mt-6 sm:gap-6 lg:grid-cols-[minmax(0,1.5fr)_minmax(320px,1fr)]">
 			<div class="rounded-xl border border-surface-200 bg-white shadow-sm">
-				<div class="flex items-center justify-between border-b border-surface-100 px-4 py-3 sm:px-5 sm:py-4">
+				<div
+					class="flex items-center justify-between border-b border-surface-100 px-4 py-3 sm:px-5 sm:py-4"
+				>
 					<div>
 						<h2 class="text-sm font-semibold text-surface-900">Assigned tickets</h2>
 						<p class="mt-0.5 text-xs text-surface-500">Tickets where you're the primary owner</p>
 					</div>
 					{#if assignedTickets.length > 0}
-						<a href="/tickets" class="rounded-lg px-3 py-1.5 text-xs font-semibold text-primary-600 hover:bg-primary-50 transition-colors">
+						<a
+							href="/tickets"
+							class="rounded-lg px-3 py-1.5 text-xs font-semibold text-primary-600 hover:bg-primary-50 transition-colors"
+						>
 							View all
 						</a>
 					{/if}
@@ -163,11 +220,18 @@
 				{:else}
 					<div class="divide-y divide-surface-100">
 						{#each assignedTickets as ticket}
-							<a href="/tickets/{ticket.id}" class="flex items-center gap-3 px-4 py-3 hover:bg-surface-50 transition-colors sm:px-5">
-								<span class="min-w-0 flex-1 truncate text-sm font-medium text-surface-700">{ticket.title}</span>
+							<a
+								href="/tickets/{ticket.id}"
+								class="flex items-center gap-3 px-4 py-3 hover:bg-surface-50 transition-colors sm:px-5"
+							>
+								<span class="min-w-0 flex-1 truncate text-sm font-medium text-surface-700"
+									>{ticket.title}</span
+								>
 								<Badge value={ticket.priority} type="priority" />
 								<Badge value={ticket.status} type="status" />
-								<span class="hidden text-xs text-surface-400 sm:inline">{formatDate(ticket.updated_at)}</span>
+								<span class="hidden text-xs text-surface-400 sm:inline"
+									>{formatDate(ticket.updated_at)}</span
+								>
 							</a>
 						{/each}
 					</div>

@@ -148,7 +148,7 @@ export class ApiClient {
 		return data;
 	}
 
-	async updateProfile(payload: Partial<Pick<User, 'first_name' | 'last_name'>>): Promise<User> {
+	async updateProfile(payload: Partial<Pick<User, 'first_name' | 'last_name' | 'email'>>): Promise<User> {
 		const data = await this.request<User>('/auth/me/', {
 			method: 'PATCH',
 			body: JSON.stringify(payload)
@@ -157,8 +157,33 @@ export class ApiClient {
 		return data;
 	}
 
+	async changePassword(currentPassword: string, newPassword: string): Promise<{ detail: string }> {
+		return this.request<{ detail: string }>('/auth/change-password/', {
+			method: 'POST',
+			body: JSON.stringify({
+				current_password: currentPassword,
+				new_password: newPassword
+			})
+		});
+	}
+
 	async listUsers(): Promise<User[]> {
 		return this.request<User[]>('/auth/users/');
+	}
+
+	async adminListUsers(): Promise<User[]> {
+		return this.request<User[]>('/auth/admin/users/');
+	}
+
+	async adminGetUser(id: string): Promise<User> {
+		return this.request<User>(`/auth/admin/users/${id}/`);
+	}
+
+	async adminUpdateUser(id: string, payload: Partial<Pick<User, 'first_name' | 'last_name' | 'email' | 'role' | 'is_active'>>): Promise<User> {
+		return this.request<User>(`/auth/admin/users/${id}/`, {
+			method: 'PATCH',
+			body: JSON.stringify(payload)
+		});
 	}
 
 	async listTickets(params: TicketListParams = {}): Promise<PaginatedResponse<Ticket>> {
@@ -251,6 +276,16 @@ export class ApiClient {
 		return this.request<Notification>(`/notifications/${id}/read/`, {
 			method: 'PATCH'
 		});
+	}
+
+	async markAllAsRead(): Promise<{ detail: string }> {
+		return this.request<{ detail: string }>('/notifications/read-all/', {
+			method: 'PATCH'
+		});
+	}
+
+	async deleteNotification(id: string): Promise<void> {
+		await this.request<void>(`/notifications/${id}/delete/`, { method: 'DELETE' });
 	}
 }
 
