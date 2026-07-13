@@ -19,10 +19,15 @@ logger = logging.getLogger(__name__)
 def send_notification_email(
     self,
     notification_id: str,
+    recipient_name: str,
     recipient_email: str,
     notification_type: str,
     ticket_id: str,
     ticket_title: str,
+    ticket_priority: str,
+    ticket_status: str,
+    triggered_by_name: str = "",
+    description: str = "",
 ):
     """Send notification email asynchronously.
 
@@ -39,20 +44,26 @@ def send_notification_email(
         return
 
     email_data = build_notification_email(
+        recipient_name=recipient_name,
         recipient_email=recipient_email,
         notification_type=notification_type,
         ticket_id=ticket_id,
         ticket_title=ticket_title,
+        ticket_priority=ticket_priority,
+        ticket_status=ticket_status,
+        triggered_by=triggered_by_name,
+        description=description,
     )
 
     try:
-        msg = mail.EmailMessage(
+        msg = mail.EmailMultiAlternatives(
             subject=email_data["subject"],
             body=email_data["message"],
             from_email=email_data["from_email"],
             to=email_data["recipient_list"],
             headers=email_data["headers"],
         )
+        msg.attach_alternative(email_data["html"], "text/html")
         msg.send()
         notification.status = Notification.Status.SENT
         notification.sent_at = timezone.now()

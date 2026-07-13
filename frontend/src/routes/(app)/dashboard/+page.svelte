@@ -25,6 +25,8 @@
 	let createdTotal = $state(0);
 	let assignedTickets = $state<Ticket[]>([]);
 
+	const isAgent = $derived(auth.user?.role === 'AGENT');
+
 	onMount(async () => {
 		if (!auth.isAuthenticated) {
 			goto('/login');
@@ -89,11 +91,11 @@
 		</svg>
 	</div>
 {:else}
-	<AppShell title={greeting} subtitle="Here's what needs your attention today.">
+	<AppShell title={greeting} subtitle={isAgent ? 'Here are your assigned tickets.' : "Here's what needs your attention today."}>
 		<div class="grid gap-3 sm:gap-4 grid-cols-2 lg:grid-cols-4">
 			<div class="stat-card stat-card-slate rounded-xl border border-surface-200 bg-white p-4 sm:p-5 shadow-sm">
 				<div class="flex items-center justify-between">
-					<p class="text-xs sm:text-sm font-medium text-surface-500">Total tickets</p>
+					<p class="text-xs sm:text-sm font-medium text-surface-500">{isAgent ? 'My assigned' : 'Total tickets'}</p>
 					<div class="flex h-8 w-8 items-center justify-center rounded-lg bg-surface-100">
 						<svg class="h-4 w-4 text-surface-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
 							<path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
@@ -105,7 +107,7 @@
 					</div>
 				</div>
 				<p class="mt-3 text-2xl sm:text-3xl font-bold text-surface-950">{total}</p>
-				<p class="mt-1 text-xs text-surface-400">All time</p>
+				<p class="mt-1 text-xs text-surface-400">{isAgent ? 'Assigned to you' : 'All time'}</p>
 			</div>
 			<div class="stat-card stat-card-blue rounded-xl border border-surface-200 bg-white p-4 sm:p-5 shadow-sm">
 				<div class="flex items-center justify-between">
@@ -148,90 +150,92 @@
 			</div>
 		</div>
 
-		<div class="mt-3 grid gap-3 sm:mt-4 sm:gap-4 sm:grid-cols-3">
-			<div class="card-hover rounded-xl border border-surface-200 bg-white p-4 sm:p-5 shadow-sm">
-				<p class="text-xs sm:text-sm font-medium text-surface-500">My assigned</p>
-				<p class="mt-2 text-2xl font-bold text-surface-950">{assignedTotal}</p>
-				<div class="mt-2 flex gap-2 text-xs">
-					<span class="text-primary-600 font-medium">{assignedOpen} open</span>
-					<span class="text-surface-300">|</span>
-					<span class="text-amber-600 font-medium">{assignedInProgress} active</span>
-					<span class="text-surface-300">|</span>
-					<span class="text-emerald-600 font-medium">{assignedClosed} done</span>
+		{#if !isAgent}
+			<div class="mt-3 grid gap-3 sm:mt-4 sm:gap-4 sm:grid-cols-3">
+				<div class="card-hover rounded-xl border border-surface-200 bg-white p-4 sm:p-5 shadow-sm">
+					<p class="text-xs sm:text-sm font-medium text-surface-500">My assigned</p>
+					<p class="mt-2 text-2xl font-bold text-surface-950">{assignedTotal}</p>
+					<div class="mt-2 flex gap-2 text-xs">
+						<span class="text-primary-600 font-medium">{assignedOpen} open</span>
+						<span class="text-surface-300">|</span>
+						<span class="text-amber-600 font-medium">{assignedInProgress} active</span>
+						<span class="text-surface-300">|</span>
+						<span class="text-emerald-600 font-medium">{assignedClosed} done</span>
+					</div>
+				</div>
+				<div class="card-hover rounded-xl border border-surface-200 bg-white p-4 sm:p-5 shadow-sm">
+					<p class="text-xs sm:text-sm font-medium text-surface-500">Created by me</p>
+					<p class="mt-2 text-2xl font-bold text-surface-950">{createdTotal}</p>
+					<p class="mt-2 text-xs text-surface-400">Tickets you created</p>
+				</div>
+				<div class="card-hover rounded-xl border border-surface-200 bg-white p-4 sm:p-5 shadow-sm">
+					<p class="text-xs sm:text-sm font-medium text-surface-500">Completion rate</p>
+					<div class="mt-2 flex items-baseline gap-2">
+						<p class="text-2xl font-bold text-surface-950">{completionRate()}%</p>
+					</div>
+					<div class="mt-2 h-2 w-full overflow-hidden rounded-full bg-surface-100">
+						<div
+							class="h-full rounded-full bg-gradient-to-r from-emerald-500 to-emerald-400 transition-all duration-500"
+							style="width: {completionRate()}%"
+						></div>
+					</div>
 				</div>
 			</div>
-			<div class="card-hover rounded-xl border border-surface-200 bg-white p-4 sm:p-5 shadow-sm">
-				<p class="text-xs sm:text-sm font-medium text-surface-500">Created by me</p>
-				<p class="mt-2 text-2xl font-bold text-surface-950">{createdTotal}</p>
-				<p class="mt-2 text-xs text-surface-400">Tickets you created</p>
-			</div>
-			<div class="card-hover rounded-xl border border-surface-200 bg-white p-4 sm:p-5 shadow-sm">
-				<p class="text-xs sm:text-sm font-medium text-surface-500">Completion rate</p>
-				<div class="mt-2 flex items-baseline gap-2">
-					<p class="text-2xl font-bold text-surface-950">{completionRate()}%</p>
-				</div>
-				<div class="mt-2 h-2 w-full overflow-hidden rounded-full bg-surface-100">
-					<div
-						class="h-full rounded-full bg-gradient-to-r from-emerald-500 to-emerald-400 transition-all duration-500"
-						style="width: {completionRate()}%"
-					></div>
-				</div>
-			</div>
-		</div>
+		{/if}
 
-		<div class="mt-3 grid gap-3 sm:mt-4 sm:gap-6 lg:grid-cols-3">
-			<div class="rounded-xl border border-surface-200 bg-white p-4 sm:p-6 shadow-sm">
-				<h2 class="text-sm font-semibold text-surface-900">Status distribution</h2>
-				<p class="mt-0.5 text-xs text-surface-500">Workflow stage breakdown</p>
-				<div class="mt-4">
+		<div class="mt-3 grid gap-3 sm:mt-4 sm:gap-6 md:grid-cols-2 lg:grid-cols-3">
+			<div class="rounded-xl border border-surface-200 bg-white p-3 sm:p-6 shadow-sm">
+				<h2 class="text-xs sm:text-sm font-semibold text-surface-900">Status distribution</h2>
+				<p class="mt-0.5 text-xs text-surface-500 hidden sm:block">{isAgent ? 'Your tickets by status' : 'Workflow stage breakdown'}</p>
+				<div class="mt-3 sm:mt-4">
 					{#if total > 0}
 						<Chart
 							labels={['Open', 'In Progress', 'Closed']}
 							data={[openCount, inProgress, closed]}
 							colors={['#4f46e5', '#f59e0b', '#10b981']}
-							height={220}
+							height={180}
 						/>
 					{:else}
-						<div class="flex h-[220px] items-center justify-center text-sm text-surface-400">
+						<div class="flex h-[180px] items-center justify-center text-sm text-surface-400">
 							No tickets yet
 						</div>
 					{/if}
 				</div>
 			</div>
 
-			<div class="rounded-xl border border-surface-200 bg-white p-4 sm:p-6 shadow-sm">
-				<h2 class="text-sm font-semibold text-surface-900">Priority breakdown</h2>
-				<p class="mt-0.5 text-xs text-surface-500">Workload by urgency level</p>
-				<div class="mt-4">
+			<div class="rounded-xl border border-surface-200 bg-white p-3 sm:p-6 shadow-sm">
+				<h2 class="text-xs sm:text-sm font-semibold text-surface-900">Priority breakdown</h2>
+				<p class="mt-0.5 text-xs text-surface-500 hidden sm:block">{isAgent ? 'Your tickets by priority' : 'Workload by urgency level'}</p>
+				<div class="mt-3 sm:mt-4">
 					{#if total > 0}
 						<Chart
 							type="bar"
 							labels={['Low', 'Medium', 'High']}
 							data={[priorityLow, priorityMedium, priorityHigh]}
 							colors={['#94a3b8', '#f59e0b', '#ef4444']}
-							height={220}
+							height={180}
 						/>
 					{:else}
-						<div class="flex h-[220px] items-center justify-center text-sm text-surface-400">
+						<div class="flex h-[180px] items-center justify-center text-sm text-surface-400">
 							No tickets yet
 						</div>
 					{/if}
 				</div>
 			</div>
 
-			<div class="rounded-xl border border-surface-200 bg-white p-4 sm:p-6 shadow-sm">
-				<h2 class="text-sm font-semibold text-surface-900">My workload</h2>
-				<p class="mt-0.5 text-xs text-surface-500">Your assigned tickets by status</p>
-				<div class="mt-4">
+			<div class="rounded-xl border border-surface-200 bg-white p-3 sm:p-6 shadow-sm md:col-span-2 lg:col-span-1">
+				<h2 class="text-xs sm:text-sm font-semibold text-surface-900">My workload</h2>
+				<p class="mt-0.5 text-xs text-surface-500 hidden sm:block">Your assigned tickets by status</p>
+				<div class="mt-3 sm:mt-4">
 					{#if assignedTotal > 0}
 						<Chart
 							labels={['Open', 'In Progress', 'Closed']}
 							data={[assignedOpen, assignedInProgress, assignedClosed]}
 							colors={['#4f46e5', '#f59e0b', '#10b981']}
-							height={220}
+							height={180}
 						/>
 					{:else}
-						<div class="flex h-[220px] items-center justify-center text-sm text-surface-400">
+						<div class="flex h-[180px] items-center justify-center text-sm text-surface-400">
 							No assigned tickets
 						</div>
 					{/if}
@@ -243,8 +247,8 @@
 			<div class="rounded-xl border border-surface-200 bg-white shadow-sm">
 				<div class="flex items-center justify-between border-b border-surface-100 px-4 py-3 sm:px-5 sm:py-4">
 					<div>
-						<h2 class="text-sm font-semibold text-surface-900">Recent tickets</h2>
-						<p class="mt-0.5 text-xs text-surface-500">Latest across the workspace</p>
+						<h2 class="text-sm font-semibold text-surface-900">{isAgent ? 'My recent tickets' : 'Recent tickets'}</h2>
+						<p class="mt-0.5 text-xs text-surface-500">{isAgent ? 'Your latest assigned tickets' : 'Latest across the workspace'}</p>
 					</div>
 					<a href="/tickets" class="rounded-lg px-3 py-1.5 text-xs font-semibold text-primary-600 hover:bg-primary-50 transition-colors">
 						View all

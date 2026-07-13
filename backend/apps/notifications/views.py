@@ -1,8 +1,9 @@
 from drf_spectacular.utils import extend_schema
-from rest_framework import generics
+from rest_framework import generics, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
+from rest_framework.views import APIView
 
 from .permissions import IsNotificationOwner
 from .selectors import get_notification, get_notification_list
@@ -49,3 +50,30 @@ class NotificationMarkReadView(generics.GenericAPIView):
         notification.is_read = True
         notification.save()
         return Response(NotificationSerializer(notification).data)
+
+
+@extend_schema(tags=["Notifications"])
+class NotificationMarkAllReadView(APIView):
+    """Mark all notifications for the authenticated user as read."""
+
+    permission_classes = [IsAuthenticated]
+
+    def patch(self, request: Request) -> Response:
+        updated = get_notification_list(user=request.user).filter(is_read=False).update(is_read=True)
+        return Response({"detail": f"{updated} notifications marked as read."})
+
+
+@extend_schema(tags=["Notifications"])
+class NotificationDeleteView(generics.DestroyAPIView):
+    """Delete a notification."""
+
+    permission_classes = [IsAuthenticated, IsNotificationOwner]
+    lookup_field = "id"
+
+    def get_object(self):
+        return get_notification(self.kwargs["id"], user=self.request.user)
+
+    def delete(self, request: Request, *args, **kwargs) -> Response:
+        notification = self.get_object()
+        notification.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
