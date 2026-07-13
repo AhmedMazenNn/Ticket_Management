@@ -49,7 +49,7 @@
 				<path d="M15 18l-6-6 6-6" />
 			</svg>
 		</button>
-		{#each pages() as p}
+		{#each pages() as p (p)}
 			{#if p === '...'}
 				<span class="px-1 text-xs text-surface-400">...</span>
 			{:else}

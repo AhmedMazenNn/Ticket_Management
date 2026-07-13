@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
-	import { page } from '$app/state';
 	import { api } from '$lib/api/client';
 	import { parseApiError } from '$lib/api/errors';
 	import { auth } from '$lib/stores/auth.svelte';
@@ -46,8 +45,8 @@
 			await api.updateTicket(ticket.id, {
 				title: title.trim(),
 				description: description.trim(),
-				priority: priority as any,
-				status: status as any,
+				priority,
+				status,
 				assigned_to: assignedTo || null
 			});
 			goto(`/tickets/${ticket.id}`);

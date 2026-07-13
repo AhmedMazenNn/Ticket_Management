@@ -4,7 +4,6 @@
 	import { api } from '$lib/api/client';
 	import { auth } from '$lib/stores/auth.svelte';
 	import AppShell from '$lib/components/layout/AppShell.svelte';
-	import Badge from '$lib/components/ui/Badge.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 	import type { User, UserRole } from '$lib/types/user';
 
@@ -37,8 +36,8 @@
 		error = '';
 		try {
 			users = await api.adminListUsers();
-		} catch (e: any) {
-			error = e?.detail || 'Failed to load users.';
+		} catch (e: unknown) {
+			error = (e as { detail?: string })?.detail || 'Failed to load users.';
 		} finally {
 			loading = false;
 		}
@@ -77,8 +76,9 @@
 			setTimeout(() => {
 				closeEdit();
 			}, 1200);
-		} catch (e: any) {
-			error = e?.detail || e?.email?.[0] || e?.role?.[0] || 'Failed to update user.';
+		} catch (e: unknown) {
+			const err = e as { detail?: string; email?: string[]; role?: string[] };
+			error = err?.detail || err?.email?.[0] || err?.role?.[0] || 'Failed to update user.';
 		} finally {
 			saving = false;
 		}

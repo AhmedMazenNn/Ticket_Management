@@ -21,7 +21,7 @@ api_patterns = [
 ]
 
 def trigger_error(request):
-    1 / 0
+    raise RuntimeError("Sentry debug error")
 
 
 urlpatterns = [

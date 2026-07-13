@@ -430,21 +430,24 @@ class TestSendNotificationEmailTask:
             ticket=ticket, user=manager, type=Notification.Type.TICKET_ASSIGNED
         )
 
-        with patch("apps.notifications.tasks.mail.EmailMessage") as mock_email_cls:
+        with patch("apps.notifications.tasks.mail.EmailMultiAlternatives") as mock_email_cls:
             mock_email_instance = mock_email_cls.return_value
             from apps.notifications.tasks import send_notification_email
 
             send_notification_email(
                 notification_id=str(notif.id),
+                recipient_name=manager.first_name or manager.email,
                 recipient_email=manager.email,
                 notification_type=Notification.Type.TICKET_ASSIGNED,
                 ticket_id=str(ticket.id),
                 ticket_title=ticket.title,
+                ticket_priority=ticket.priority,
+                ticket_status=ticket.status,
             )
             mock_email_cls.assert_called_once()
             mock_email_instance.send.assert_called_once()
             call_kwargs = mock_email_cls.call_args[1]
-            assert "Ticket Assigned" in call_kwargs["subject"]
+            assert "assigned a ticket" in call_kwargs["subject"]
             assert manager.email in call_kwargs["to"]
 
     def test_notification_becomes_sent_on_success(self, manager):
@@ -455,15 +458,18 @@ class TestSendNotificationEmailTask:
             ticket=ticket, user=manager, type=Notification.Type.TICKET_ASSIGNED
         )
 
-        with patch("apps.notifications.tasks.mail.EmailMessage"):
+        with patch("apps.notifications.tasks.mail.EmailMultiAlternatives"):
             from apps.notifications.tasks import send_notification_email
 
             send_notification_email(
                 notification_id=str(notif.id),
+                recipient_name=manager.first_name or manager.email,
                 recipient_email=manager.email,
                 notification_type=Notification.Type.TICKET_ASSIGNED,
                 ticket_id=str(ticket.id),
                 ticket_title=ticket.title,
+                ticket_priority=ticket.priority,
+                ticket_status=ticket.status,
             )
             notif.refresh_from_db()
             assert notif.status == Notification.Status.SENT
@@ -478,17 +484,20 @@ class TestSendNotificationEmailTask:
         )
 
         with patch(
-            "apps.notifications.tasks.mail.EmailMessage", side_effect=Exception("SMTP error")
+            "apps.notifications.tasks.mail.EmailMultiAlternatives", side_effect=Exception("SMTP error")
         ):
             from apps.notifications.tasks import send_notification_email
 
             with pytest.raises(Exception, match="SMTP error"):
                 send_notification_email(
                     notification_id=str(notif.id),
+                    recipient_name=manager.first_name or manager.email,
                     recipient_email=manager.email,
                     notification_type=Notification.Type.TICKET_ASSIGNED,
                     ticket_id=str(ticket.id),
                     ticket_title=ticket.title,
+                    ticket_priority=ticket.priority,
+                    ticket_status=ticket.status,
                 )
             notif.refresh_from_db()
             assert notif.status == Notification.Status.FAILED
@@ -498,15 +507,18 @@ class TestSendNotificationEmailTask:
         import uuid
         from unittest.mock import patch
 
-        with patch("apps.notifications.tasks.mail.EmailMessage") as mock_email_cls:
+        with patch("apps.notifications.tasks.mail.EmailMultiAlternatives") as mock_email_cls:
             from apps.notifications.tasks import send_notification_email
 
             send_notification_email(
                 notification_id=str(uuid.uuid4()),
+                recipient_name="Test User",
                 recipient_email="test@example.com",
                 notification_type=Notification.Type.TICKET_ASSIGNED,
                 ticket_id=str(uuid.uuid4()),
                 ticket_title="Test Ticket",
+                ticket_priority="MEDIUM",
+                ticket_status="OPEN",
             )
             mock_email_cls.assert_not_called()
 
@@ -516,22 +528,25 @@ class TestSendNotificationEmailTask:
         ticket = TicketFactory(created_by=agent, title="Fix login bug")
         notif = NotificationFactory(ticket=ticket, user=agent, type=Notification.Type.COMMENT_ADDED)
 
-        with patch("apps.notifications.tasks.mail.EmailMessage") as mock_email_cls:
+        with patch("apps.notifications.tasks.mail.EmailMultiAlternatives") as mock_email_cls:
             from apps.notifications.tasks import send_notification_email
 
             send_notification_email(
                 notification_id=str(notif.id),
+                recipient_name=agent.first_name or agent.email,
                 recipient_email=agent.email,
                 notification_type=Notification.Type.COMMENT_ADDED,
                 ticket_id=str(ticket.id),
                 ticket_title=ticket.title,
+                ticket_priority=ticket.priority,
+                ticket_status=ticket.status,
             )
             call_kwargs = mock_email_cls.call_args[1]
             subject = call_kwargs["subject"]
             body = call_kwargs["body"]
-            assert "New Comment on Ticket" in subject
+            assert "comment on ticket" in subject
             assert "Fix login bug" in body
-            assert "Comment Added" in body
+            assert "received a new comment" in body
 
     def test_task_includes_threading_headers(self, agent):
         from unittest.mock import patch
@@ -541,15 +556,18 @@ class TestSendNotificationEmailTask:
             ticket=ticket, user=agent, type=Notification.Type.TICKET_ASSIGNED
         )
 
-        with patch("apps.notifications.tasks.mail.EmailMessage") as mock_email_cls:
+        with patch("apps.notifications.tasks.mail.EmailMultiAlternatives") as mock_email_cls:
             from apps.notifications.tasks import send_notification_email
 
             send_notification_email(
                 notification_id=str(notif.id),
+                recipient_name=agent.first_name or agent.email,
                 recipient_email=agent.email,
                 notification_type=Notification.Type.TICKET_ASSIGNED,
                 ticket_id=str(ticket.id),
                 ticket_title=ticket.title,
+                ticket_priority=ticket.priority,
+                ticket_status=ticket.status,
             )
             call_kwargs = mock_email_cls.call_args[1]
             headers = call_kwargs["headers"]
@@ -573,7 +591,7 @@ class TestNotificationTaskRetry:
         )
 
         with patch(
-            "apps.notifications.tasks.mail.EmailMessage", side_effect=Exception("Temporary failure")
+            "apps.notifications.tasks.mail.EmailMultiAlternatives", side_effect=Exception("Temporary failure")
         ):
             from apps.notifications.tasks import send_notification_email
 
@@ -583,10 +601,13 @@ class TestNotificationTaskRetry:
                 send_notification_email.apply(
                     kwargs={
                         "notification_id": str(notif.id),
+                        "recipient_name": manager.first_name or manager.email,
                         "recipient_email": manager.email,
                         "notification_type": Notification.Type.TICKET_ASSIGNED,
                         "ticket_id": str(ticket.id),
                         "ticket_title": ticket.title,
+                        "ticket_priority": ticket.priority,
+                        "ticket_status": ticket.status,
                     },
                 )
                 mock_retry.assert_called_once()

@@ -44,12 +44,18 @@
 			});
 			profileSaved = true;
 			setTimeout(() => (profileSaved = false), 2000);
-		} catch (e: any) {
+		} catch (e: unknown) {
+			const err = e as {
+				detail?: string;
+				first_name?: string[];
+				last_name?: string[];
+				email?: string[];
+			};
 			profileError =
-				e?.detail ||
-				e?.first_name?.[0] ||
-				e?.last_name?.[0] ||
-				e?.email?.[0] ||
+				err?.detail ||
+				err?.first_name?.[0] ||
+				err?.last_name?.[0] ||
+				err?.email?.[0] ||
 				'Failed to update profile.';
 		} finally {
 			profileLoading = false;
@@ -75,11 +81,12 @@
 			newPassword = '';
 			confirmPassword = '';
 			setTimeout(() => (passwordSaved = false), 2000);
-		} catch (e: any) {
+		} catch (e: unknown) {
+			const err = e as { detail?: string; current_password?: string[]; new_password?: string[] };
 			passwordError =
-				e?.detail ||
-				e?.current_password?.[0] ||
-				e?.new_password?.[0] ||
+				err?.detail ||
+				err?.current_password?.[0] ||
+				err?.new_password?.[0] ||
 				'Failed to change password.';
 		} finally {
 			passwordLoading = false;

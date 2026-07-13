@@ -8,6 +8,7 @@
 	import Card from '$lib/components/ui/Card.svelte';
 	import FieldError from '$lib/components/ui/FieldError.svelte';
 	import { TICKET_PRIORITIES, TICKET_STATUSES } from '$lib/constants';
+	import type { TicketPriority, TicketStatus } from '$lib/types/ticket';
 	import type { User } from '$lib/types/user';
 
 	let { data } = $props();
@@ -19,8 +20,8 @@
 
 	let title = $state('');
 	let description = $state('');
-	let priority = $state('MEDIUM');
-	let status = $state('OPEN');
+	let priority = $state<TicketPriority>('MEDIUM');
+	let status = $state<TicketStatus>('OPEN');
 	let assignedTo = $state('');
 
 	let assignableUsers = $derived(
@@ -44,8 +45,8 @@
 			const ticket = await api.createTicket({
 				title: title.trim(),
 				description: description.trim(),
-				priority: priority as any,
-				status: status as any,
+				priority,
+				status,
 				assigned_to: assignedTo || null
 			});
 			goto(`/tickets/${ticket.id}`);

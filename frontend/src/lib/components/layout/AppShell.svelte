@@ -179,7 +179,7 @@
 		</div>
 
 		<nav class="flex-1 space-y-1 overflow-y-auto px-3 py-4">
-			{#each navItems as item}
+			{#each navItems as item (item.href)}
 				<a
 					href={item.href}
 					onclick={closeMobile}
@@ -359,7 +359,7 @@
 							{:else if recentNotifications.length === 0}
 								<p class="py-8 text-center text-sm text-slate-500">No notifications yet</p>
 							{:else}
-								{#each recentNotifications as notification}
+								{#each recentNotifications as notification (notification.id)}
 									<button
 										type="button"
 										onclick={() => handleMarkAsRead(notification)}
