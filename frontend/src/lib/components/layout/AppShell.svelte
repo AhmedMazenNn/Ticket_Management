@@ -179,7 +179,7 @@
 		</div>
 
 		<nav class="flex-1 space-y-1 overflow-y-auto px-3 py-4">
-			{#each navItems as item}
+			{#each navItems as item (item.href)}
 				<a
 					href={item.href}
 					onclick={closeMobile}
@@ -202,7 +202,9 @@
 					{#if sidebarOpen || mobileOpen}
 						{item.label}
 						{#if item.href === '/notifications' && notifications.unreadCount > 0}
-							<span class="ml-auto inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-rose-500 px-1.5 text-[10px] font-bold text-white shadow-sm">
+							<span
+								class="ml-auto inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-rose-500 px-1.5 text-[10px] font-bold text-white shadow-sm"
+							>
 								{notifications.unreadCount > 99 ? '99+' : notifications.unreadCount}
 							</span>
 						{/if}
@@ -269,7 +271,9 @@
 	</aside>
 
 	<div class="flex flex-1 flex-col min-w-0">
-		<header class="glass sticky top-0 z-30 flex items-center gap-4 border-b border-slate-200/60 px-4 py-3 sm:px-6">
+		<header
+			class="glass sticky top-0 z-30 flex items-center gap-4 border-b border-slate-200/60 px-4 py-3 sm:px-6"
+		>
 			<button
 				type="button"
 				onclick={() => (mobileOpen = !mobileOpen)}
@@ -293,12 +297,20 @@
 					class="relative rounded-xl p-2.5 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600"
 					aria-label="Notifications"
 				>
-					<svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+					<svg
+						class="h-5 w-5"
+						viewBox="0 0 24 24"
+						fill="none"
+						stroke="currentColor"
+						stroke-width="1.5"
+					>
 						<path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9" />
 						<path d="M13.73 21a2 2 0 01-3.46 0" />
 					</svg>
 					{#if notifications.unreadCount > 0}
-						<span class="absolute -top-0.5 -right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-rose-500 px-1 text-[10px] font-bold text-white shadow-sm">
+						<span
+							class="absolute -top-0.5 -right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-rose-500 px-1 text-[10px] font-bold text-white shadow-sm"
+						>
 							{notifications.unreadCount > 99 ? '99+' : notifications.unreadCount}
 						</span>
 					{/if}
@@ -310,7 +322,9 @@
 						onclick={closeBell}
 						aria-label="Close notifications"
 					></button>
-					<div class="absolute right-0 top-full z-50 mt-2 w-80 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl">
+					<div
+						class="absolute right-0 top-full z-50 mt-2 w-80 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl"
+					>
 						<div class="flex items-center justify-between border-b border-slate-100 px-4 py-3">
 							<h3 class="text-sm font-semibold text-slate-900">Notifications</h3>
 							{#if recentNotifications.some((n) => !n.is_read)}
@@ -327,24 +341,43 @@
 							{#if loadingRecent}
 								<div class="flex items-center justify-center py-8">
 									<svg class="h-5 w-5 animate-spin text-slate-400" viewBox="0 0 24 24" fill="none">
-										<circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
-										<path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+										<circle
+											class="opacity-25"
+											cx="12"
+											cy="12"
+											r="10"
+											stroke="currentColor"
+											stroke-width="4"
+										/>
+										<path
+											class="opacity-75"
+											fill="currentColor"
+											d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+										/>
 									</svg>
 								</div>
 							{:else if recentNotifications.length === 0}
 								<p class="py-8 text-center text-sm text-slate-500">No notifications yet</p>
 							{:else}
-								{#each recentNotifications as notification}
+								{#each recentNotifications as notification (notification.id)}
 									<button
 										type="button"
 										onclick={() => handleMarkAsRead(notification)}
 										class="flex w-full items-start gap-3 px-4 py-3 text-left transition-colors hover:bg-slate-50
 											{notification.is_read ? '' : 'bg-indigo-50/40'}"
 									>
-										<span class="mt-0.5 h-2 w-2 shrink-0 rounded-full {notification.is_read ? 'bg-transparent' : 'bg-indigo-500'}"></span>
+										<span
+											class="mt-0.5 h-2 w-2 shrink-0 rounded-full {notification.is_read
+												? 'bg-transparent'
+												: 'bg-indigo-500'}"
+										></span>
 										<div class="min-w-0 flex-1">
-											<p class="text-sm font-medium text-slate-900">{NOTIFICATION_LABELS[notification.type]}</p>
-											<p class="mt-0.5 truncate text-xs text-slate-500">{notification.ticket.title}</p>
+											<p class="text-sm font-medium text-slate-900">
+												{NOTIFICATION_LABELS[notification.type]}
+											</p>
+											<p class="mt-0.5 truncate text-xs text-slate-500">
+												{notification.ticket.title}
+											</p>
 											<p class="mt-1 text-xs text-slate-400">{timeAgo(notification.created_at)}</p>
 										</div>
 									</button>

@@ -170,12 +170,8 @@ class TestHistoryOrdering:
     def test_history_returned_newest_first(self, manager_client):
         ticket = TicketFactory(title="Original", priority="LOW")
 
-        manager_client.patch(
-            f"/api/tickets/{ticket.id}/", {"title": "Second"}, format="json"
-        )
-        manager_client.patch(
-            f"/api/tickets/{ticket.id}/", {"priority": "HIGH"}, format="json"
-        )
+        manager_client.patch(f"/api/tickets/{ticket.id}/", {"title": "Second"}, format="json")
+        manager_client.patch(f"/api/tickets/{ticket.id}/", {"priority": "HIGH"}, format="json")
 
         history_response = manager_client.get(f"/api/tickets/{ticket.id}/history/")
         assert len(history_response.data) == 2

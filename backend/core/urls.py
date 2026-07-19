@@ -20,8 +20,9 @@ api_patterns = [
     # path("dashboard/",     include("apps.dashboard.urls")),
 ]
 
+
 def trigger_error(request):
-    division_by_zero = 1 / 0
+    raise RuntimeError("Sentry debug error")
 
 
 urlpatterns = [

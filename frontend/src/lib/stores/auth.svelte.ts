@@ -28,7 +28,8 @@ class AuthState {
 	constructor() {
 		if (typeof window !== 'undefined') {
 			this.accessToken = localStorage.getItem(STORAGE_KEY_ACCESS) || readCookie(STORAGE_KEY_ACCESS);
-			this.refreshToken = localStorage.getItem(STORAGE_KEY_REFRESH) || readCookie(STORAGE_KEY_REFRESH);
+			this.refreshToken =
+				localStorage.getItem(STORAGE_KEY_REFRESH) || readCookie(STORAGE_KEY_REFRESH);
 		}
 	}
 

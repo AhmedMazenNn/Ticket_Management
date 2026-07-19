@@ -13,11 +13,7 @@ User = get_user_model()
 
 def get_notification_list(*, user: User) -> QuerySet[Notification]:
     """Retrieve all notifications for a user, newest first."""
-    return (
-        Notification.objects.select_related("ticket")
-        .filter(user=user)
-        .order_by("-created_at")
-    )
+    return Notification.objects.select_related("ticket").filter(user=user).order_by("-created_at")
 
 
 def get_notification(notification_id: uuid.UUID, *, user: User) -> Notification:
@@ -26,8 +22,6 @@ def get_notification(notification_id: uuid.UUID, *, user: User) -> Notification:
     Raises NotFound if the notification does not exist or belongs to another user.
     """
     try:
-        return Notification.objects.select_related("ticket").get(
-            id=notification_id, user=user
-        )
+        return Notification.objects.select_related("ticket").get(id=notification_id, user=user)
     except Notification.DoesNotExist as err:
         raise NotFound("Notification not found.") from err

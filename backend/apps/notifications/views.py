@@ -59,7 +59,9 @@ class NotificationMarkAllReadView(APIView):
     permission_classes = [IsAuthenticated]
 
     def patch(self, request: Request) -> Response:
-        updated = get_notification_list(user=request.user).filter(is_read=False).update(is_read=True)
+        updated = (
+            get_notification_list(user=request.user).filter(is_read=False).update(is_read=True)
+        )
         return Response({"detail": f"{updated} notifications marked as read."})
 
 

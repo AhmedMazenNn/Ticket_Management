@@ -18,11 +18,7 @@ export interface Notification {
 }
 
 export type NotificationType =
-	| 'TICKET_ASSIGNED'
-	| 'STATUS_CHANGED'
-	| 'PRIORITY_CHANGED'
-	| 'TICKET_UPDATED'
-	| 'COMMENT_ADDED';
+	'TICKET_ASSIGNED' | 'STATUS_CHANGED' | 'PRIORITY_CHANGED' | 'TICKET_UPDATED' | 'COMMENT_ADDED';
 
 export const NOTIFICATION_LABELS: Record<NotificationType, string> = {
 	TICKET_ASSIGNED: 'Ticket assigned to you',

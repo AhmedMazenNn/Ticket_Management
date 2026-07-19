@@ -44,8 +44,19 @@
 			});
 			profileSaved = true;
 			setTimeout(() => (profileSaved = false), 2000);
-		} catch (e: any) {
-			profileError = e?.detail || e?.first_name?.[0] || e?.last_name?.[0] || e?.email?.[0] || 'Failed to update profile.';
+		} catch (e: unknown) {
+			const err = e as {
+				detail?: string;
+				first_name?: string[];
+				last_name?: string[];
+				email?: string[];
+			};
+			profileError =
+				err?.detail ||
+				err?.first_name?.[0] ||
+				err?.last_name?.[0] ||
+				err?.email?.[0] ||
+				'Failed to update profile.';
 		} finally {
 			profileLoading = false;
 		}
@@ -70,8 +81,13 @@
 			newPassword = '';
 			confirmPassword = '';
 			setTimeout(() => (passwordSaved = false), 2000);
-		} catch (e: any) {
-			passwordError = e?.detail || e?.current_password?.[0] || e?.new_password?.[0] || 'Failed to change password.';
+		} catch (e: unknown) {
+			const err = e as { detail?: string; current_password?: string[]; new_password?: string[] };
+			passwordError =
+				err?.detail ||
+				err?.current_password?.[0] ||
+				err?.new_password?.[0] ||
+				'Failed to change password.';
 		} finally {
 			passwordLoading = false;
 		}
@@ -83,7 +99,13 @@
 		<Card className="p-6 sm:p-7 shadow-sm">
 			<div class="flex gap-3">
 				<span class="rounded-lg bg-primary-50 p-2.5 text-primary-600">
-					<svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+					<svg
+						class="h-5 w-5"
+						viewBox="0 0 24 24"
+						fill="none"
+						stroke="currentColor"
+						stroke-width="1.5"
+					>
 						<path d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
 					</svg>
 				</span>
@@ -93,50 +115,45 @@
 				</div>
 			</div>
 			{#if profileError}
-				<div class="mt-4 rounded-lg bg-rose-50 px-4 py-3 text-sm text-rose-700 ring-1 ring-inset ring-rose-200">
+				<div
+					class="mt-4 rounded-lg bg-rose-50 px-4 py-3 text-sm text-rose-700 ring-1 ring-inset ring-rose-200"
+				>
 					{profileError}
 				</div>
 			{/if}
 			{#if profileSaved}
-				<div class="mt-4 rounded-lg bg-emerald-50 px-4 py-3 text-sm text-emerald-700 ring-1 ring-inset ring-emerald-200">
+				<div
+					class="mt-4 rounded-lg bg-emerald-50 px-4 py-3 text-sm text-emerald-700 ring-1 ring-inset ring-emerald-200"
+				>
 					Profile updated successfully.
 				</div>
 			{/if}
 			<div class="mt-6 grid gap-5 sm:grid-cols-2">
 				<label class="block">
 					<span class="mb-1.5 block text-sm font-semibold text-surface-700">First name</span>
-					<input
-						type="text"
-						class="form-input"
-						bind:value={firstName}
-						placeholder="First name"
-					/>
+					<input type="text" class="form-input" bind:value={firstName} placeholder="First name" />
 				</label>
 				<label class="block">
 					<span class="mb-1.5 block text-sm font-semibold text-surface-700">Last name</span>
-					<input
-						type="text"
-						class="form-input"
-						bind:value={lastName}
-						placeholder="Last name"
-					/>
+					<input type="text" class="form-input" bind:value={lastName} placeholder="Last name" />
 				</label>
 			</div>
 			<div class="mt-5">
 				<label class="block">
 					<span class="mb-1.5 block text-sm font-semibold text-surface-700">Email</span>
-					<input
-						type="email"
-						class="form-input"
-						bind:value={email}
-						placeholder="Email address"
-					/>
+					<input type="email" class="form-input" bind:value={email} placeholder="Email address" />
 				</label>
 			</div>
 			<div class="mt-6 flex justify-end">
 				<Button onclick={saveProfile} loading={profileLoading}>
 					{#if profileSaved}
-						<svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+						<svg
+							class="h-4 w-4"
+							viewBox="0 0 24 24"
+							fill="none"
+							stroke="currentColor"
+							stroke-width="2"
+						>
 							<path d="M20 6L9 17l-5-5" />
 						</svg>
 						Saved
@@ -150,8 +167,16 @@
 		<Card className="p-6 sm:p-7 shadow-sm">
 			<div class="flex gap-3">
 				<span class="rounded-lg bg-amber-50 p-2.5 text-amber-600">
-					<svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-						<path d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+					<svg
+						class="h-5 w-5"
+						viewBox="0 0 24 24"
+						fill="none"
+						stroke="currentColor"
+						stroke-width="1.5"
+					>
+						<path
+							d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+						/>
 					</svg>
 				</span>
 				<div>
@@ -160,12 +185,16 @@
 				</div>
 			</div>
 			{#if passwordError}
-				<div class="mt-4 rounded-lg bg-rose-50 px-4 py-3 text-sm text-rose-700 ring-1 ring-inset ring-rose-200">
+				<div
+					class="mt-4 rounded-lg bg-rose-50 px-4 py-3 text-sm text-rose-700 ring-1 ring-inset ring-rose-200"
+				>
 					{passwordError}
 				</div>
 			{/if}
 			{#if passwordSaved}
-				<div class="mt-4 rounded-lg bg-emerald-50 px-4 py-3 text-sm text-emerald-700 ring-1 ring-inset ring-emerald-200">
+				<div
+					class="mt-4 rounded-lg bg-emerald-50 px-4 py-3 text-sm text-emerald-700 ring-1 ring-inset ring-emerald-200"
+				>
 					Password changed successfully.
 				</div>
 			{/if}
@@ -189,7 +218,9 @@
 					/>
 				</label>
 				<label class="block">
-					<span class="mb-1.5 block text-sm font-semibold text-surface-700">Confirm new password</span>
+					<span class="mb-1.5 block text-sm font-semibold text-surface-700"
+						>Confirm new password</span
+					>
 					<input
 						type="password"
 						class="form-input"
@@ -201,7 +232,13 @@
 			<div class="mt-6 flex justify-end">
 				<Button onclick={changePassword} loading={passwordLoading}>
 					{#if passwordSaved}
-						<svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+						<svg
+							class="h-4 w-4"
+							viewBox="0 0 24 24"
+							fill="none"
+							stroke="currentColor"
+							stroke-width="2"
+						>
 							<path d="M20 6L9 17l-5-5" />
 						</svg>
 						Changed

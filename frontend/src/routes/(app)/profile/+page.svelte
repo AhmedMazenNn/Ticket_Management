@@ -14,7 +14,6 @@
 	let assignedOpen = $state(0);
 	let assignedInProgress = $state(0);
 	let assignedClosed = $state(0);
-	let createdTotal = $state(0);
 	let assignedTickets = $state<Ticket[]>([]);
 
 	const initials = $derived(
@@ -36,7 +35,6 @@
 			assignedOpen = stats.assigned_open;
 			assignedInProgress = stats.assigned_in_progress;
 			assignedClosed = stats.assigned_closed;
-			createdTotal = stats.created_total;
 			assignedTickets = stats.assigned_tickets;
 		} catch {
 			auth.clear();
@@ -219,7 +217,7 @@
 					</div>
 				{:else}
 					<div class="divide-y divide-surface-100">
-						{#each assignedTickets as ticket}
+						{#each assignedTickets as ticket (ticket.id)}
 							<a
 								href="/tickets/{ticket.id}"
 								class="flex items-center gap-3 px-4 py-3 hover:bg-surface-50 transition-colors sm:px-5"

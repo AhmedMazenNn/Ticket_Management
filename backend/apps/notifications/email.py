@@ -145,7 +145,7 @@ def _build_html(
                             <td width="33%" valign="top">
                               <p style="margin:0;font-size:11px;color:#94a3b8;text-transform:uppercase;letter-spacing:0.05em;font-weight:600;">Status</p>
                               <p style="margin:4px 0 0;">
-                                <span style="display:inline-block;font-size:12px;font-weight:600;color:{status_color};background:{status_color}15;padding:3px 10px;border-radius:20px;border:1px solid {status_color}30;">{ticket_status.replace('_', ' ').title()}</span>
+                                <span style="display:inline-block;font-size:12px;font-weight:600;color:{status_color};background:{status_color}15;padding:3px 10px;border-radius:20px;border:1px solid {status_color}30;">{ticket_status.replace("_", " ").title()}</span>
                               </p>
                             </td>
                             <td width="33%" valign="top">
@@ -230,14 +230,16 @@ def _build_plain_text(
         truncated = description[:200] + ("..." if len(description) > 200 else "")
         lines.extend(["", "Description:", truncated])
 
-    lines.extend([
-        "",
-        f"View ticket: {ticket_url}",
-        "",
-        "---",
-        "You received this because you're a member of this workspace.",
-        f"Manage notifications: {frontend_base}/settings",
-    ])
+    lines.extend(
+        [
+            "",
+            f"View ticket: {ticket_url}",
+            "",
+            "---",
+            "You received this because you're a member of this workspace.",
+            f"Manage notifications: {frontend_base}/settings",
+        ]
+    )
 
     return "\n".join(lines)
 

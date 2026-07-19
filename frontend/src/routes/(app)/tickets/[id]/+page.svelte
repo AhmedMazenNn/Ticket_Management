@@ -166,7 +166,10 @@
 		</a>
 	{/snippet}
 
-	<a href="/tickets" class="-mt-2 mb-5 inline-flex items-center gap-1.5 text-sm font-medium text-surface-500 hover:text-primary-600 transition-colors">
+	<a
+		href="/tickets"
+		class="-mt-2 mb-5 inline-flex items-center gap-1.5 text-sm font-medium text-surface-500 hover:text-primary-600 transition-colors"
+	>
 		<svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
 			<path d="M19 12H5M12 19l-7-7 7-7" />
 		</svg>
@@ -195,7 +198,8 @@
 						<div>
 							<h2 class="text-sm font-semibold text-surface-900">Discussion</h2>
 							<p class="mt-0.5 text-xs text-surface-500">
-								{comments.length} {comments.length === 1 ? 'comment' : 'comments'}
+								{comments.length}
+								{comments.length === 1 ? 'comment' : 'comments'}
 							</p>
 						</div>
 					</div>
@@ -225,8 +229,19 @@
 									>
 										{#if submitting}
 											<svg class="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
-												<circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
-												<path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+												<circle
+													class="opacity-25"
+													cx="12"
+													cy="12"
+													r="10"
+													stroke="currentColor"
+													stroke-width="4"
+												/>
+												<path
+													class="opacity-75"
+													fill="currentColor"
+													d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+												/>
 											</svg>
 											Sending...
 										{:else}
@@ -240,15 +255,36 @@
 
 					{#if loadingComments}
 						<div class="py-10 text-center text-sm text-surface-400">
-							<svg class="mx-auto h-6 w-6 animate-spin text-surface-300" viewBox="0 0 24 24" fill="none">
-								<circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
-								<path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+							<svg
+								class="mx-auto h-6 w-6 animate-spin text-surface-300"
+								viewBox="0 0 24 24"
+								fill="none"
+							>
+								<circle
+									class="opacity-25"
+									cx="12"
+									cy="12"
+									r="10"
+									stroke="currentColor"
+									stroke-width="4"
+								/>
+								<path
+									class="opacity-75"
+									fill="currentColor"
+									d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+								/>
 							</svg>
 							<p class="mt-2">Loading comments...</p>
 						</div>
 					{:else if comments.length === 0}
 						<div class="py-10 text-center">
-							<svg class="mx-auto h-10 w-10 text-surface-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+							<svg
+								class="mx-auto h-10 w-10 text-surface-300"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								stroke-width="1.5"
+							>
 								<path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" />
 							</svg>
 							<p class="mt-2 text-sm font-medium text-surface-500">No comments yet</p>
@@ -267,7 +303,10 @@
 												{comment.author.first_name || comment.author.email}
 												{comment.author.last_name || ''}
 											</span>
-											<span class="text-xs text-surface-400" title={formatDateTime(comment.created_at)}>
+											<span
+												class="text-xs text-surface-400"
+												title={formatDateTime(comment.created_at)}
+											>
 												{timeAgo(comment.created_at)}
 											</span>
 											{#if comment.updated_at !== comment.created_at}
@@ -285,10 +324,16 @@
 													<p class="mt-2 text-xs text-rose-600">{editError}</p>
 												{/if}
 												<div class="mt-2 flex gap-2">
-													<button onclick={() => saveEdit(comment.id)} class="inline-flex items-center rounded-lg bg-primary-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-primary-700 transition-colors">
+													<button
+														onclick={() => saveEdit(comment.id)}
+														class="inline-flex items-center rounded-lg bg-primary-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-primary-700 transition-colors"
+													>
 														Save
 													</button>
-													<button onclick={cancelEdit} class="inline-flex items-center rounded-lg border border-surface-200 bg-white px-3 py-1.5 text-xs font-semibold text-surface-600 hover:bg-surface-50 transition-colors">
+													<button
+														onclick={cancelEdit}
+														class="inline-flex items-center rounded-lg border border-surface-200 bg-white px-3 py-1.5 text-xs font-semibold text-surface-600 hover:bg-surface-50 transition-colors"
+													>
 														Cancel
 													</button>
 												</div>
@@ -297,18 +342,40 @@
 											<p class="mt-1 text-sm leading-6 text-surface-600">{comment.body}</p>
 										{/if}
 										{#if auth.user && (auth.user.id === comment.author.id || auth.user.role === 'ADMIN') && editingId !== comment.id}
-											<div class="mt-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-												<button onclick={() => startEdit(comment)} class="inline-flex items-center gap-1 text-xs font-medium text-surface-400 hover:text-primary-600 transition-colors">
-													<svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+											<div
+												class="mt-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity"
+											>
+												<button
+													onclick={() => startEdit(comment)}
+													class="inline-flex items-center gap-1 text-xs font-medium text-surface-400 hover:text-primary-600 transition-colors"
+												>
+													<svg
+														class="h-3.5 w-3.5"
+														viewBox="0 0 24 24"
+														fill="none"
+														stroke="currentColor"
+														stroke-width="2"
+													>
 														<path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" />
 														<path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" />
 													</svg>
 													Edit
 												</button>
-												<button onclick={() => deleteComment(comment.id)} class="inline-flex items-center gap-1 text-xs font-medium text-surface-400 hover:text-rose-600 transition-colors">
-													<svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+												<button
+													onclick={() => deleteComment(comment.id)}
+													class="inline-flex items-center gap-1 text-xs font-medium text-surface-400 hover:text-rose-600 transition-colors"
+												>
+													<svg
+														class="h-3.5 w-3.5"
+														viewBox="0 0 24 24"
+														fill="none"
+														stroke="currentColor"
+														stroke-width="2"
+													>
 														<polyline points="3 6 5 6 21 6" />
-														<path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2" />
+														<path
+															d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"
+														/>
 													</svg>
 													Delete
 												</button>
@@ -331,7 +398,13 @@
 				<div class="divide-y divide-surface-100">
 					<div class="px-5 py-4">
 						<p class="mb-2 flex items-center gap-2 text-xs font-semibold text-surface-400">
-							<svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+							<svg
+								class="h-3.5 w-3.5"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								stroke-width="2"
+							>
 								<path d="M20 6L9 17l-5-5" />
 							</svg>
 							Status
@@ -340,8 +413,16 @@
 					</div>
 					<div class="px-5 py-4">
 						<p class="mb-2 flex items-center gap-2 text-xs font-semibold text-surface-400">
-							<svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-								<path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z" />
+							<svg
+								class="h-3.5 w-3.5"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								stroke-width="2"
+							>
+								<path
+									d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"
+								/>
 								<line x1="7" y1="7" x2="7.01" y2="7" />
 							</svg>
 							Priority
@@ -350,7 +431,13 @@
 					</div>
 					<div class="px-5 py-4">
 						<p class="mb-2 flex items-center gap-2 text-xs font-semibold text-surface-400">
-							<svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+							<svg
+								class="h-3.5 w-3.5"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								stroke-width="2"
+							>
 								<path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" />
 								<circle cx="12" cy="7" r="4" />
 							</svg>
@@ -359,7 +446,8 @@
 						{#if ticket.assigned_to}
 							<span class="flex items-center gap-2 text-sm font-medium text-surface-700">
 								<Avatar initials={getUserInitials(ticket.assigned_to)} size="sm" />
-								{ticket.assigned_to.first_name} {ticket.assigned_to.last_name}
+								{ticket.assigned_to.first_name}
+								{ticket.assigned_to.last_name}
 							</span>
 						{:else}
 							<span class="text-sm text-surface-400">Unassigned</span>
@@ -367,7 +455,13 @@
 					</div>
 					<div class="px-5 py-4">
 						<p class="mb-2 flex items-center gap-2 text-xs font-semibold text-surface-400">
-							<svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+							<svg
+								class="h-3.5 w-3.5"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								stroke-width="2"
+							>
 								<path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" />
 								<circle cx="12" cy="7" r="4" />
 							</svg>
@@ -375,12 +469,19 @@
 						</p>
 						<span class="flex items-center gap-2 text-sm font-medium text-surface-700">
 							<Avatar initials={getUserInitials(ticket.created_by)} size="sm" />
-							{ticket.created_by.first_name || ticket.created_by.email} {ticket.created_by.last_name || ''}
+							{ticket.created_by.first_name || ticket.created_by.email}
+							{ticket.created_by.last_name || ''}
 						</span>
 					</div>
 					<div class="px-5 py-4">
 						<p class="mb-2 flex items-center gap-2 text-xs font-semibold text-surface-400">
-							<svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+							<svg
+								class="h-3.5 w-3.5"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								stroke-width="2"
+							>
 								<rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
 								<line x1="16" y1="2" x2="16" y2="6" />
 								<line x1="8" y1="2" x2="8" y2="6" />
@@ -392,7 +493,13 @@
 					</div>
 					<div class="px-5 py-4">
 						<p class="mb-2 flex items-center gap-2 text-xs font-semibold text-surface-400">
-							<svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+							<svg
+								class="h-3.5 w-3.5"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								stroke-width="2"
+							>
 								<circle cx="12" cy="12" r="10" />
 								<polyline points="12 6 12 12 16 14" />
 							</svg>
@@ -407,21 +514,43 @@
 				<div class="border-b border-surface-100 px-5 py-4">
 					<h2 class="text-sm font-semibold text-surface-900">Activity</h2>
 					<p class="mt-0.5 text-xs text-surface-500">
-						{historyItems.length} {historyItems.length === 1 ? 'event' : 'events'}
+						{historyItems.length}
+						{historyItems.length === 1 ? 'event' : 'events'}
 					</p>
 				</div>
 				<div class="p-5">
 					{#if loadingHistory}
 						<div class="py-8 text-center text-sm text-surface-400">
-							<svg class="mx-auto h-5 w-5 animate-spin text-surface-300" viewBox="0 0 24 24" fill="none">
-								<circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
-								<path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+							<svg
+								class="mx-auto h-5 w-5 animate-spin text-surface-300"
+								viewBox="0 0 24 24"
+								fill="none"
+							>
+								<circle
+									class="opacity-25"
+									cx="12"
+									cy="12"
+									r="10"
+									stroke="currentColor"
+									stroke-width="4"
+								/>
+								<path
+									class="opacity-75"
+									fill="currentColor"
+									d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+								/>
 							</svg>
 							<p class="mt-2">Loading activity...</p>
 						</div>
 					{:else if historyItems.length === 0}
 						<div class="py-8 text-center">
-							<svg class="mx-auto h-8 w-8 text-surface-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+							<svg
+								class="mx-auto h-8 w-8 text-surface-300"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								stroke-width="1.5"
+							>
 								<path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
 							</svg>
 							<p class="mt-2 text-sm font-medium text-surface-500">No activity yet</p>
@@ -433,17 +562,31 @@
 							<div class="space-y-4">
 								{#each historyItems as entry (entry.id)}
 									<div class="relative flex gap-3">
-										<div class="relative z-10 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white ring-2 ring-surface-100">
-											<svg class="h-3.5 w-3.5 text-surface-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+										<div
+											class="relative z-10 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white ring-2 ring-surface-100"
+										>
+											<svg
+												class="h-3.5 w-3.5 text-surface-500"
+												viewBox="0 0 24 24"
+												fill="none"
+												stroke="currentColor"
+												stroke-width="2"
+												stroke-linecap="round"
+												stroke-linejoin="round"
+											>
 												<path d={FIELD_ICONS[entry.field_name] ?? FIELD_ICONS.created} />
 											</svg>
 										</div>
 										<div class="min-w-0 flex-1 pt-1">
 											<div class="flex items-center gap-2">
 												<span class="text-sm font-medium text-surface-700">
-													{entry.changed_by.first_name || entry.changed_by.email} {entry.changed_by.last_name || ''}
+													{entry.changed_by.first_name || entry.changed_by.email}
+													{entry.changed_by.last_name || ''}
 												</span>
-												<span class="text-xs text-surface-400" title={formatDateTime(entry.created_at)}>
+												<span
+													class="text-xs text-surface-400"
+													title={formatDateTime(entry.created_at)}
+												>
 													{timeAgo(entry.created_at)}
 												</span>
 											</div>
@@ -451,7 +594,9 @@
 												<p class="mt-1 text-sm text-surface-500">Created this ticket</p>
 											{:else}
 												<p class="mt-1 text-sm text-surface-500">
-													Changed <span class="font-medium text-surface-600">{FIELD_LABELS[entry.field_name] ?? entry.field_name}</span>
+													Changed <span class="font-medium text-surface-600"
+														>{FIELD_LABELS[entry.field_name] ?? entry.field_name}</span
+													>
 													{#if entry.old_value && entry.new_value}
 														from <span class="font-medium text-surface-600">{entry.old_value}</span>
 														to <span class="font-medium text-surface-600">{entry.new_value}</span>

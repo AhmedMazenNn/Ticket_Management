@@ -44,9 +44,7 @@ def create_notification(
         ticket_priority=ticket.priority,
         ticket_status=ticket.status,
         triggered_by_name=(
-            f"{triggered_by.first_name} {triggered_by.last_name}".strip()
-            if triggered_by
-            else ""
+            f"{triggered_by.first_name} {triggered_by.last_name}".strip() if triggered_by else ""
         ),
         description=ticket.description[:300] if ticket.description else "",
     )

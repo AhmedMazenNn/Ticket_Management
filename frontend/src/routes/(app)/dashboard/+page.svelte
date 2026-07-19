@@ -91,13 +91,28 @@
 		</svg>
 	</div>
 {:else}
-	<AppShell title={greeting} subtitle={isAgent ? 'Here are your assigned tickets.' : "Here's what needs your attention today."}>
+	<AppShell
+		title={greeting}
+		subtitle={isAgent
+			? 'Here are your assigned tickets.'
+			: "Here's what needs your attention today."}
+	>
 		<div class="grid gap-3 sm:gap-4 grid-cols-2 lg:grid-cols-4">
-			<div class="stat-card stat-card-slate rounded-xl border border-surface-200 bg-white p-4 sm:p-5 shadow-sm">
+			<div
+				class="stat-card stat-card-slate rounded-xl border border-surface-200 bg-white p-4 sm:p-5 shadow-sm"
+			>
 				<div class="flex items-center justify-between">
-					<p class="text-xs sm:text-sm font-medium text-surface-500">{isAgent ? 'My assigned' : 'Total tickets'}</p>
+					<p class="text-xs sm:text-sm font-medium text-surface-500">
+						{isAgent ? 'My assigned' : 'Total tickets'}
+					</p>
 					<div class="flex h-8 w-8 items-center justify-center rounded-lg bg-surface-100">
-						<svg class="h-4 w-4 text-surface-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+						<svg
+							class="h-4 w-4 text-surface-600"
+							viewBox="0 0 24 24"
+							fill="none"
+							stroke="currentColor"
+							stroke-width="2"
+						>
 							<path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
 							<polyline points="14 2 14 8 20 8" />
 							<line x1="16" y1="13" x2="8" y2="13" />
@@ -109,11 +124,19 @@
 				<p class="mt-3 text-2xl sm:text-3xl font-bold text-surface-950">{total}</p>
 				<p class="mt-1 text-xs text-surface-400">{isAgent ? 'Assigned to you' : 'All time'}</p>
 			</div>
-			<div class="stat-card stat-card-blue rounded-xl border border-surface-200 bg-white p-4 sm:p-5 shadow-sm">
+			<div
+				class="stat-card stat-card-blue rounded-xl border border-surface-200 bg-white p-4 sm:p-5 shadow-sm"
+			>
 				<div class="flex items-center justify-between">
 					<p class="text-xs sm:text-sm font-medium text-surface-500">Open</p>
 					<div class="flex h-8 w-8 items-center justify-center rounded-lg bg-primary-50">
-						<svg class="h-4 w-4 text-primary-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+						<svg
+							class="h-4 w-4 text-primary-600"
+							viewBox="0 0 24 24"
+							fill="none"
+							stroke="currentColor"
+							stroke-width="2"
+						>
 							<circle cx="12" cy="12" r="10" />
 							<line x1="12" y1="8" x2="12" y2="16" />
 							<line x1="8" y1="12" x2="16" y2="12" />
@@ -123,23 +146,41 @@
 				<p class="mt-3 text-2xl sm:text-3xl font-bold text-primary-600">{openCount}</p>
 				<p class="mt-1 text-xs text-surface-400">Awaiting action</p>
 			</div>
-			<div class="stat-card stat-card-amber rounded-xl border border-surface-200 bg-white p-4 sm:p-5 shadow-sm">
+			<div
+				class="stat-card stat-card-amber rounded-xl border border-surface-200 bg-white p-4 sm:p-5 shadow-sm"
+			>
 				<div class="flex items-center justify-between">
 					<p class="text-xs sm:text-sm font-medium text-surface-500">In progress</p>
 					<div class="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-50">
-						<svg class="h-4 w-4 text-amber-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-							<path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" />
+						<svg
+							class="h-4 w-4 text-amber-600"
+							viewBox="0 0 24 24"
+							fill="none"
+							stroke="currentColor"
+							stroke-width="2"
+						>
+							<path
+								d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"
+							/>
 						</svg>
 					</div>
 				</div>
 				<p class="mt-3 text-2xl sm:text-3xl font-bold text-amber-600">{inProgress}</p>
 				<p class="mt-1 text-xs text-surface-400">Being worked on</p>
 			</div>
-			<div class="stat-card stat-card-emerald rounded-xl border border-surface-200 bg-white p-4 sm:p-5 shadow-sm">
+			<div
+				class="stat-card stat-card-emerald rounded-xl border border-surface-200 bg-white p-4 sm:p-5 shadow-sm"
+			>
 				<div class="flex items-center justify-between">
 					<p class="text-xs sm:text-sm font-medium text-surface-500">Closed</p>
 					<div class="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-50">
-						<svg class="h-4 w-4 text-emerald-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+						<svg
+							class="h-4 w-4 text-emerald-600"
+							viewBox="0 0 24 24"
+							fill="none"
+							stroke="currentColor"
+							stroke-width="2"
+						>
 							<path d="M22 11.08V12a10 10 0 11-5.93-9.14" />
 							<polyline points="22 4 12 14.01 9 11.01" />
 						</svg>
@@ -186,7 +227,9 @@
 		<div class="mt-3 grid gap-3 sm:mt-4 sm:gap-6 md:grid-cols-2 lg:grid-cols-3">
 			<div class="rounded-xl border border-surface-200 bg-white p-3 sm:p-6 shadow-sm">
 				<h2 class="text-xs sm:text-sm font-semibold text-surface-900">Status distribution</h2>
-				<p class="mt-0.5 text-xs text-surface-500 hidden sm:block">{isAgent ? 'Your tickets by status' : 'Workflow stage breakdown'}</p>
+				<p class="mt-0.5 text-xs text-surface-500 hidden sm:block">
+					{isAgent ? 'Your tickets by status' : 'Workflow stage breakdown'}
+				</p>
 				<div class="mt-3 sm:mt-4">
 					{#if total > 0}
 						<Chart
@@ -205,7 +248,9 @@
 
 			<div class="rounded-xl border border-surface-200 bg-white p-3 sm:p-6 shadow-sm">
 				<h2 class="text-xs sm:text-sm font-semibold text-surface-900">Priority breakdown</h2>
-				<p class="mt-0.5 text-xs text-surface-500 hidden sm:block">{isAgent ? 'Your tickets by priority' : 'Workload by urgency level'}</p>
+				<p class="mt-0.5 text-xs text-surface-500 hidden sm:block">
+					{isAgent ? 'Your tickets by priority' : 'Workload by urgency level'}
+				</p>
 				<div class="mt-3 sm:mt-4">
 					{#if total > 0}
 						<Chart
@@ -223,9 +268,13 @@
 				</div>
 			</div>
 
-			<div class="rounded-xl border border-surface-200 bg-white p-3 sm:p-6 shadow-sm md:col-span-2 lg:col-span-1">
+			<div
+				class="rounded-xl border border-surface-200 bg-white p-3 sm:p-6 shadow-sm md:col-span-2 lg:col-span-1"
+			>
 				<h2 class="text-xs sm:text-sm font-semibold text-surface-900">My workload</h2>
-				<p class="mt-0.5 text-xs text-surface-500 hidden sm:block">Your assigned tickets by status</p>
+				<p class="mt-0.5 text-xs text-surface-500 hidden sm:block">
+					Your assigned tickets by status
+				</p>
 				<div class="mt-3 sm:mt-4">
 					{#if assignedTotal > 0}
 						<Chart
@@ -245,12 +294,21 @@
 
 		<div class="mt-3 grid gap-3 sm:mt-4 sm:gap-6 lg:grid-cols-2">
 			<div class="rounded-xl border border-surface-200 bg-white shadow-sm">
-				<div class="flex items-center justify-between border-b border-surface-100 px-4 py-3 sm:px-5 sm:py-4">
+				<div
+					class="flex items-center justify-between border-b border-surface-100 px-4 py-3 sm:px-5 sm:py-4"
+				>
 					<div>
-						<h2 class="text-sm font-semibold text-surface-900">{isAgent ? 'My recent tickets' : 'Recent tickets'}</h2>
-						<p class="mt-0.5 text-xs text-surface-500">{isAgent ? 'Your latest assigned tickets' : 'Latest across the workspace'}</p>
+						<h2 class="text-sm font-semibold text-surface-900">
+							{isAgent ? 'My recent tickets' : 'Recent tickets'}
+						</h2>
+						<p class="mt-0.5 text-xs text-surface-500">
+							{isAgent ? 'Your latest assigned tickets' : 'Latest across the workspace'}
+						</p>
 					</div>
-					<a href="/tickets" class="rounded-lg px-3 py-1.5 text-xs font-semibold text-primary-600 hover:bg-primary-50 transition-colors">
+					<a
+						href="/tickets"
+						class="rounded-lg px-3 py-1.5 text-xs font-semibold text-primary-600 hover:bg-primary-50 transition-colors"
+					>
 						View all
 					</a>
 				</div>
@@ -264,13 +322,19 @@
 								class="block px-4 py-3 hover:bg-surface-50 transition-colors sm:flex sm:items-center sm:gap-3 sm:px-5"
 							>
 								<div class="flex items-center gap-2 sm:gap-3 sm:min-w-0 sm:flex-1">
-									<span class="hidden text-xs font-semibold text-primary-600 sm:inline">{ticket.id.slice(0, 8)}</span>
-									<span class="min-w-0 flex-1 truncate text-sm font-medium text-surface-700">{ticket.title}</span>
+									<span class="hidden text-xs font-semibold text-primary-600 sm:inline"
+										>{ticket.id.slice(0, 8)}</span
+									>
+									<span class="min-w-0 flex-1 truncate text-sm font-medium text-surface-700"
+										>{ticket.title}</span
+									>
 								</div>
 								<div class="mt-2 flex items-center gap-2 sm:mt-0 sm:flex-shrink-0">
 									<Badge value={ticket.priority} type="priority" />
 									<Badge value={ticket.status} type="status" />
-									<span class="hidden text-xs text-surface-400 md:inline">{formatDate(ticket.created_at)}</span>
+									<span class="hidden text-xs text-surface-400 md:inline"
+										>{formatDate(ticket.created_at)}</span
+									>
 								</div>
 							</a>
 						{/each}
@@ -279,12 +343,17 @@
 			</div>
 
 			<div class="rounded-xl border border-surface-200 bg-white shadow-sm">
-				<div class="flex items-center justify-between border-b border-surface-100 px-4 py-3 sm:px-5 sm:py-4">
+				<div
+					class="flex items-center justify-between border-b border-surface-100 px-4 py-3 sm:px-5 sm:py-4"
+				>
 					<div>
 						<h2 class="text-sm font-semibold text-surface-900">My assigned tickets</h2>
 						<p class="mt-0.5 text-xs text-surface-500">Tickets you need to work on</p>
 					</div>
-					<a href="/tickets" class="rounded-lg px-3 py-1.5 text-xs font-semibold text-primary-600 hover:bg-primary-50 transition-colors">
+					<a
+						href="/tickets"
+						class="rounded-lg px-3 py-1.5 text-xs font-semibold text-primary-600 hover:bg-primary-50 transition-colors"
+					>
 						View all
 					</a>
 				</div>
@@ -298,8 +367,12 @@
 								class="block px-4 py-3 hover:bg-surface-50 transition-colors sm:flex sm:items-center sm:gap-3 sm:px-5"
 							>
 								<div class="flex items-center gap-2 sm:gap-3 sm:min-w-0 sm:flex-1">
-									<span class="hidden text-xs font-semibold text-primary-600 sm:inline">{ticket.id.slice(0, 8)}</span>
-									<span class="min-w-0 flex-1 truncate text-sm font-medium text-surface-700">{ticket.title}</span>
+									<span class="hidden text-xs font-semibold text-primary-600 sm:inline"
+										>{ticket.id.slice(0, 8)}</span
+									>
+									<span class="min-w-0 flex-1 truncate text-sm font-medium text-surface-700"
+										>{ticket.title}</span
+									>
 								</div>
 								<div class="mt-2 flex items-center gap-2 sm:mt-0 sm:flex-shrink-0">
 									<Badge value={ticket.priority} type="priority" />

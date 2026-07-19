@@ -4,7 +4,6 @@
 	import { api } from '$lib/api/client';
 	import { auth } from '$lib/stores/auth.svelte';
 	import AppShell from '$lib/components/layout/AppShell.svelte';
-	import Badge from '$lib/components/ui/Badge.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 	import type { User, UserRole } from '$lib/types/user';
 
@@ -37,8 +36,8 @@
 		error = '';
 		try {
 			users = await api.adminListUsers();
-		} catch (e: any) {
-			error = e?.detail || 'Failed to load users.';
+		} catch (e: unknown) {
+			error = (e as { detail?: string })?.detail || 'Failed to load users.';
 		} finally {
 			loading = false;
 		}
@@ -77,8 +76,9 @@
 			setTimeout(() => {
 				closeEdit();
 			}, 1200);
-		} catch (e: any) {
-			error = e?.detail || e?.email?.[0] || e?.role?.[0] || 'Failed to update user.';
+		} catch (e: unknown) {
+			const err = e as { detail?: string; email?: string[]; role?: string[] };
+			error = err?.detail || err?.email?.[0] || err?.role?.[0] || 'Failed to update user.';
 		} finally {
 			saving = false;
 		}
@@ -109,7 +109,11 @@
 		<div class="flex items-center justify-center py-20">
 			<svg class="h-8 w-8 animate-spin text-primary-600" viewBox="0 0 24 24" fill="none">
 				<circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
-				<path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+				<path
+					class="opacity-75"
+					fill="currentColor"
+					d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+				/>
 			</svg>
 		</div>
 	{:else if error && users.length === 0}
@@ -124,8 +128,12 @@
 						<tr class="border-b border-surface-100 bg-surface-50/50">
 							<th class="px-4 py-3 font-semibold text-surface-600 sm:px-6">User</th>
 							<th class="px-4 py-3 font-semibold text-surface-600 sm:px-6">Role</th>
-							<th class="px-4 py-3 font-semibold text-surface-600 sm:px-6 hidden md:table-cell">Status</th>
-							<th class="px-4 py-3 font-semibold text-surface-600 sm:px-6 hidden lg:table-cell">Joined</th>
+							<th class="px-4 py-3 font-semibold text-surface-600 sm:px-6 hidden md:table-cell"
+								>Status</th
+							>
+							<th class="px-4 py-3 font-semibold text-surface-600 sm:px-6 hidden lg:table-cell"
+								>Joined</th
+							>
 							<th class="px-4 py-3 font-semibold text-surface-600 sm:px-6 text-right">Actions</th>
 						</tr>
 					</thead>
@@ -134,23 +142,41 @@
 							<tr class="hover:bg-surface-50/50 transition-colors">
 								<td class="px-4 py-3 sm:px-6">
 									<div class="flex items-center gap-3">
-										<span class="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-gradient-to-br from-primary-500 to-purple-600 text-xs font-bold text-white">
-											{(user.first_name?.[0] ?? '') + (user.last_name?.[0] ?? '') || user.email[0].toUpperCase()}
+										<span
+											class="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-gradient-to-br from-primary-500 to-purple-600 text-xs font-bold text-white"
+										>
+											{(user.first_name?.[0] ?? '') + (user.last_name?.[0] ?? '') ||
+												user.email[0].toUpperCase()}
 										</span>
 										<div class="min-w-0">
-											<p class="font-medium text-surface-900 truncate">{user.first_name} {user.last_name}</p>
+											<p class="font-medium text-surface-900 truncate">
+												{user.first_name}
+												{user.last_name}
+											</p>
 											<p class="text-xs text-surface-500 truncate">{user.email}</p>
 										</div>
 									</div>
 								</td>
 								<td class="px-4 py-3 sm:px-6">
-									<span class="inline-flex rounded-full px-2 py-0.5 text-xs font-semibold ring-1 ring-inset {roleBadgeClass(user.role)}">
+									<span
+										class="inline-flex rounded-full px-2 py-0.5 text-xs font-semibold ring-1 ring-inset {roleBadgeClass(
+											user.role
+										)}"
+									>
 										{user.role}
 									</span>
 								</td>
 								<td class="px-4 py-3 sm:px-6 hidden md:table-cell">
-									<span class="inline-flex items-center gap-1.5 text-xs font-medium {user.is_active ? 'text-emerald-700' : 'text-surface-400'}">
-										<span class="h-1.5 w-1.5 rounded-full {user.is_active ? 'bg-emerald-500' : 'bg-surface-300'}"></span>
+									<span
+										class="inline-flex items-center gap-1.5 text-xs font-medium {user.is_active
+											? 'text-emerald-700'
+											: 'text-surface-400'}"
+									>
+										<span
+											class="h-1.5 w-1.5 rounded-full {user.is_active
+												? 'bg-emerald-500'
+												: 'bg-surface-300'}"
+										></span>
 										{user.is_active ? 'Active' : 'Inactive'}
 									</span>
 								</td>
@@ -180,8 +206,11 @@
 
 {#if editingUser}
 	<div class="fixed inset-0 z-50 flex items-center justify-center p-4">
-		<button type="button" class="fixed inset-0 bg-black/40 backdrop-blur-sm" onclick={closeEdit}></button>
-		<div class="relative w-full max-w-lg rounded-2xl border border-surface-200 bg-white p-6 shadow-2xl">
+		<button type="button" class="fixed inset-0 bg-black/40 backdrop-blur-sm" onclick={closeEdit}
+		></button>
+		<div
+			class="relative w-full max-w-lg rounded-2xl border border-surface-200 bg-white p-6 shadow-2xl"
+		>
 			<div class="flex items-center justify-between">
 				<h2 class="text-lg font-bold text-surface-900">Edit User</h2>
 				<button
@@ -189,19 +218,29 @@
 					onclick={closeEdit}
 					class="rounded-lg p-1.5 text-surface-400 hover:bg-surface-100 hover:text-surface-600"
 				>
-					<svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+					<svg
+						class="h-5 w-5"
+						viewBox="0 0 24 24"
+						fill="none"
+						stroke="currentColor"
+						stroke-width="2"
+					>
 						<path d="M18 6L6 18M6 6l12 12" />
 					</svg>
 				</button>
 			</div>
 
 			{#if error}
-				<div class="mt-4 rounded-lg bg-rose-50 px-4 py-3 text-sm text-rose-700 ring-1 ring-inset ring-rose-200">
+				<div
+					class="mt-4 rounded-lg bg-rose-50 px-4 py-3 text-sm text-rose-700 ring-1 ring-inset ring-rose-200"
+				>
 					{error}
 				</div>
 			{/if}
 			{#if saveSuccess}
-				<div class="mt-4 rounded-lg bg-emerald-50 px-4 py-3 text-sm text-emerald-700 ring-1 ring-inset ring-emerald-200">
+				<div
+					class="mt-4 rounded-lg bg-emerald-50 px-4 py-3 text-sm text-emerald-700 ring-1 ring-inset ring-emerald-200"
+				>
 					User updated successfully.
 				</div>
 			{/if}
@@ -231,14 +270,14 @@
 				</label>
 				<div class="flex items-center gap-3">
 					<label class="relative inline-flex cursor-pointer items-center">
-						<input
-							type="checkbox"
-							class="peer sr-only"
-							bind:checked={editIsActive}
-						/>
-						<div class="h-6 w-11 rounded-full bg-surface-200 after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:bg-white after:shadow-sm after:transition-all peer-checked:bg-primary-600 peer-checked:after:translate-x-full"></div>
+						<input type="checkbox" class="peer sr-only" bind:checked={editIsActive} />
+						<div
+							class="h-6 w-11 rounded-full bg-surface-200 after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:bg-white after:shadow-sm after:transition-all peer-checked:bg-primary-600 peer-checked:after:translate-x-full"
+						></div>
 					</label>
-					<span class="text-sm font-medium text-surface-700">{editIsActive ? 'Active' : 'Inactive'}</span>
+					<span class="text-sm font-medium text-surface-700"
+						>{editIsActive ? 'Active' : 'Inactive'}</span
+					>
 				</div>
 			</div>
 
@@ -246,7 +285,13 @@
 				<Button variant="secondary" onclick={closeEdit}>Cancel</Button>
 				<Button onclick={saveUser} loading={saving}>
 					{#if saveSuccess}
-						<svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+						<svg
+							class="h-4 w-4"
+							viewBox="0 0 24 24"
+							fill="none"
+							stroke="currentColor"
+							stroke-width="2"
+						>
 							<path d="M20 6L9 17l-5-5" />
 						</svg>
 						Saved
