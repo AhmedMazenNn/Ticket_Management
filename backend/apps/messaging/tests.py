@@ -94,6 +94,7 @@ class TestPublishEvent:
 # ---------------------------------------------------------------------------
 
 
+@pytest.mark.django_db(transaction=True)
 class TestTicketEventPublishing:
     @patch("apps.tickets.services.publish_event")
     def test_ticket_created_publishes_event(self, mock_publish, manager):
@@ -168,6 +169,7 @@ class TestTicketEventPublishing:
 # ---------------------------------------------------------------------------
 
 
+@pytest.mark.django_db(transaction=True)
 class TestCommentEventPublishing:
     @patch("apps.comments.services.publish_event")
     def test_comment_created_publishes_event(self, mock_publish, manager):

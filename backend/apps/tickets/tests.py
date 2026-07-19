@@ -438,3 +438,330 @@ class TestDashboardCache:
         )
         assert cache.get("dashboard_stats") is None
         assert cache.get(f"my_stats_{agent.id}") is None
+
+
+# ---------------------------------------------------------------------------
+# Transaction Safety — on_commit
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.django_db(transaction=True)
+class TestTicketTransactionSafety:
+    def test_event_dispatched_on_successful_commit(self, manager):
+        """When the transaction commits, publish_event is called."""
+        from unittest.mock import patch
+
+        from django.db import transaction
+
+        from apps.tickets.services import create_ticket
+
+        with patch("apps.tickets.services.publish_event") as mock_publish:
+            with transaction.atomic():
+                create_ticket(title="Tx test", created_by=manager)
+            mock_publish.assert_called_once()
+
+    def test_no_event_dispatched_on_ticket_create_rollback(self, manager):
+        """When the transaction rolls back on create_ticket, no event is published."""
+        from unittest.mock import patch
+
+        from django.db import transaction
+        from django.db.utils import IntegrityError
+
+        from apps.tickets.services import create_ticket
+
+        with patch("apps.tickets.services.publish_event") as mock_publish:
+            try:
+                with transaction.atomic():
+                    create_ticket(title="Rollback test", created_by=manager)
+                    raise IntegrityError("simulated rollback")
+            except IntegrityError:
+                pass
+
+            mock_publish.assert_not_called()
+
+    def test_no_event_dispatched_on_ticket_update_rollback(self, manager):
+        """When the transaction rolls back on update_ticket, no event is published."""
+        from unittest.mock import patch
+
+        from django.db import transaction
+        from django.db.utils import IntegrityError
+
+        from apps.tickets.services import update_ticket
+
+        ticket = TicketFactory(created_by=manager)
+
+        with patch("apps.tickets.services.publish_event") as mock_publish:
+            try:
+                with transaction.atomic():
+                    update_ticket(ticket, changed_by=manager, title="Updated")
+                    raise IntegrityError("simulated rollback")
+            except IntegrityError:
+                pass
+
+            mock_publish.assert_not_called()
+
+    def test_no_event_dispatched_on_assign_ticket_rollback(self, manager, agent):
+        """When the transaction rolls back on assign_ticket, no event is published."""
+        from unittest.mock import patch
+
+        from django.db import transaction
+        from django.db.utils import IntegrityError
+
+        from apps.tickets.services import assign_ticket
+
+        ticket = TicketFactory(created_by=manager)
+
+        with patch("apps.tickets.services.publish_event") as mock_publish:
+            try:
+                with transaction.atomic():
+                    assign_ticket(ticket, agent, changed_by=manager)
+                    raise IntegrityError("simulated rollback")
+            except IntegrityError:
+                pass
+
+            mock_publish.assert_not_called()
+
+    def test_no_ticket_persisted_on_rollback(self, manager):
+        """When the transaction rolls back, the ticket row is gone."""
+        from unittest.mock import patch
+
+        from django.db import transaction
+        from django.db.utils import IntegrityError
+
+        from apps.tickets.services import create_ticket
+
+        initial_count = Ticket.objects.count()
+
+        with patch("apps.tickets.services.publish_event"):
+            try:
+                with transaction.atomic():
+                    create_ticket(title="Rollback test", created_by=manager)
+                    raise IntegrityError("simulated rollback")
+            except IntegrityError:
+                pass
+
+        assert Ticket.objects.count() == initial_count
+
+
+# ---------------------------------------------------------------------------
+# Cache Invalidation — Assignee Changes
+# ---------------------------------------------------------------------------
+
+
+class TestAssigneeCacheInvalidation:
+    def test_update_ticket_invalidates_old_assignee_cache(self, manager, agent):
+        """When assignee changes, old assignee's cache is invalidated."""
+        from unittest.mock import patch
+
+        from django.core.cache import cache
+
+        from apps.tickets.services import update_ticket
+
+        ticket = TicketFactory(created_by=manager, assigned_to=agent)
+
+        # Pre-populate caches for both users
+        cache.set(f"dashboard_stats_agent_{agent.id}", {"stale": True}, timeout=300)
+        cache.set(f"my_stats_{agent.id}", {"stale": True}, timeout=300)
+
+        new_agent = UserFactory(role=User.Role.AGENT)
+        cache.set(f"dashboard_stats_agent_{new_agent.id}", {"stale": True}, timeout=300)
+        cache.set(f"my_stats_{new_agent.id}", {"stale": True}, timeout=300)
+
+        with patch("apps.tickets.services.publish_event"):
+            update_ticket(ticket, changed_by=manager, assigned_to=new_agent)
+
+        assert cache.get(f"dashboard_stats_agent_{agent.id}") is None
+        assert cache.get(f"my_stats_{agent.id}") is None
+        assert cache.get(f"dashboard_stats_agent_{new_agent.id}") is None
+        assert cache.get(f"my_stats_{new_agent.id}") is None
+
+    def test_update_ticket_without_assignee_change_does_not_crash(self, manager):
+        """Updating non-assignee fields still invalidates caches correctly."""
+        from unittest.mock import patch
+
+        from django.core.cache import cache
+
+        from apps.tickets.services import update_ticket
+
+        ticket = TicketFactory(created_by=manager, assigned_to=manager)
+        cache.set(f"dashboard_stats_agent_{manager.id}", {"stale": True}, timeout=300)
+
+        with patch("apps.tickets.services.publish_event"):
+            update_ticket(ticket, changed_by=manager, title="Updated Title")
+
+        assert cache.get(f"dashboard_stats_agent_{manager.id}") is None
+
+    def test_delete_ticket_invalidates_assignee_cache(self, manager, agent):
+        """Deleting a ticket invalidates the assignee's cache."""
+        from unittest.mock import patch
+
+        from django.core.cache import cache
+
+        from apps.tickets.services import delete_ticket
+
+        ticket = TicketFactory(created_by=manager, assigned_to=agent)
+        cache.set(f"dashboard_stats_agent_{agent.id}", {"stale": True}, timeout=300)
+        cache.set(f"my_stats_{agent.id}", {"stale": True}, timeout=300)
+
+        with patch("apps.tickets.services.publish_event"):
+            delete_ticket(ticket)
+
+        assert cache.get(f"dashboard_stats_agent_{agent.id}") is None
+        assert cache.get(f"my_stats_{agent.id}") is None
+
+
+# ---------------------------------------------------------------------------
+# Admin Cache Invalidation
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.django_db(transaction=True)
+class TestAdminCacheInvalidation:
+    def test_admin_save_invalidates_cache(self, admin_user):
+        """Admin saving a ticket via Django admin invalidates cache."""
+        from unittest.mock import patch
+
+        from django.contrib.admin.sites import AdminSite
+        from django.core.cache import cache
+
+        from apps.tickets.admin import TicketAdmin
+
+        ticket = TicketFactory(created_by=admin_user, assigned_to=admin_user)
+        cache.set(f"dashboard_stats_agent_{admin_user.id}", {"stale": True}, timeout=300)
+        cache.set("dashboard_stats", {"stale": True}, timeout=300)
+
+        site = AdminSite()
+        admin_instance = TicketAdmin(Ticket, site)
+        admin_instance.save_model(
+            request=None,
+            obj=ticket,
+            form=None,
+            change=False,
+        )
+
+        assert cache.get(f"dashboard_stats_agent_{admin_user.id}") is None
+        assert cache.get("dashboard_stats") is None
+
+    def test_admin_save_with_assignee_change_invalidates_both_caches(self, admin_user):
+        """Admin reassigning a ticket invalidates both old and new assignee caches."""
+        from unittest.mock import patch
+
+        from django.contrib.admin.sites import AdminSite
+        from django.core.cache import cache
+
+        from apps.tickets.admin import TicketAdmin
+
+        old_agent = UserFactory(role=User.Role.AGENT)
+        ticket = TicketFactory(created_by=admin_user, assigned_to=old_agent)
+
+        cache.set(f"dashboard_stats_agent_{old_agent.id}", {"stale": True}, timeout=300)
+
+        new_agent = UserFactory(role=User.Role.AGENT)
+        cache.set(f"dashboard_stats_agent_{new_agent.id}", {"stale": True}, timeout=300)
+
+        site = AdminSite()
+        admin_instance = TicketAdmin(Ticket, site)
+
+        # Simulate admin reassignment by manually setting old initial and new value
+        class FakeForm:
+            initial = {"assigned_to": old_agent.id}
+
+        ticket.assigned_to = new_agent
+        admin_instance.save_model(
+            request=None,
+            obj=ticket,
+            form=FakeForm(),
+            change=True,
+        )
+
+        assert cache.get(f"dashboard_stats_agent_{old_agent.id}") is None
+        assert cache.get(f"dashboard_stats_agent_{new_agent.id}") is None
+
+
+# ---------------------------------------------------------------------------
+# Dashboard Query Performance
+# ---------------------------------------------------------------------------
+
+
+class TestDashboardQueryPerformance:
+    def test_dashboard_stats_query_count(self, manager_client):
+        """Dashboard stats should use at most 2 DB queries."""
+        from django.core.cache import cache
+        from django.db import connection
+        from django.test.utils import CaptureQueriesContext
+
+        cache.clear()
+        TicketFactory.create_batch(5)
+
+        with CaptureQueriesContext(connection) as ctx:
+            response = manager_client.get("/api/tickets/dashboard_stats/")
+
+        assert response.status_code == status.HTTP_200_OK
+        assert len(ctx) <= 2
+
+    def test_my_stats_query_count(self, manager_client, manager):
+        """My stats should use at most 3 DB queries."""
+        from django.core.cache import cache
+        from django.db import connection
+        from django.test.utils import CaptureQueriesContext
+
+        cache.clear()
+        TicketFactory.create_batch(5, assigned_to=manager)
+
+        with CaptureQueriesContext(connection) as ctx:
+            response = manager_client.get("/api/tickets/my_stats/")
+
+        assert response.status_code == status.HTTP_200_OK
+        assert len(ctx) <= 3
+
+    def test_dashboard_stats_correctness(self, manager_client, manager, agent):
+        """Verify aggregated statistics match expected values."""
+        from django.core.cache import cache
+
+        cache.clear()
+        TicketFactory.create_batch(2, status="OPEN", priority="LOW", created_by=manager)
+        TicketFactory(status="IN_PROGRESS", priority="HIGH", assigned_to=agent, created_by=manager)
+        TicketFactory(status="CLOSED", priority="MEDIUM", created_by=manager)
+
+        response = manager_client.get("/api/tickets/dashboard_stats/")
+        assert response.status_code == status.HTTP_200_OK
+        assert response.data["total"] == 4
+        assert response.data["open"] == 2
+        assert response.data["in_progress"] == 1
+        assert response.data["closed"] == 1
+        assert response.data["priority_breakdown"]["low"] == 2
+        assert response.data["priority_breakdown"]["medium"] == 1
+        assert response.data["priority_breakdown"]["high"] == 1
+
+    def test_my_stats_correctness(self, manager_client, manager):
+        """Verify my_stats aggregation matches expected values."""
+        from django.core.cache import cache
+
+        cache.clear()
+        TicketFactory.create_batch(3, assigned_to=manager, created_by=manager, status="OPEN")
+        TicketFactory(assigned_to=manager, created_by=manager, status="CLOSED")
+        TicketFactory(created_by=manager, assigned_to=None)
+
+        response = manager_client.get("/api/tickets/my_stats/")
+        assert response.status_code == status.HTTP_200_OK
+        assert response.data["assigned_total"] == 4
+        assert response.data["assigned_open"] == 3
+        assert response.data["assigned_closed"] == 1
+        assert response.data["created_total"] == 5
+
+    def test_dashboard_agent_scoped_query_count(self, agent_client, agent):
+        """Agent dashboard should also use at most 2 DB queries."""
+        from django.core.cache import cache
+        from django.db import connection
+        from django.test.utils import CaptureQueriesContext
+
+        cache.clear()
+        TicketFactory.create_batch(3, assigned_to=agent)
+        TicketFactory.create_batch(2)
+
+        with CaptureQueriesContext(connection) as ctx:
+            response = agent_client.get("/api/tickets/dashboard_stats/")
+
+        assert response.status_code == status.HTTP_200_OK
+        assert response.data["total"] == 3
+        assert len(ctx) <= 2

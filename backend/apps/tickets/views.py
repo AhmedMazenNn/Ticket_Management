@@ -1,4 +1,5 @@
 from django.core.cache import cache
+from django.db.models import Count, Q
 from drf_spectacular.utils import extend_schema
 from rest_framework import generics, status
 from rest_framework.permissions import IsAuthenticated
@@ -134,23 +135,28 @@ class DashboardStatsView(APIView):
         else:
             qs = Ticket.objects.all()
 
-        total = qs.count()
-        open_count = qs.filter(status=Ticket.Status.OPEN).count()
-        in_progress = qs.filter(status=Ticket.Status.IN_PROGRESS).count()
-        closed = qs.filter(status=Ticket.Status.CLOSED).count()
+        aggregates = qs.aggregate(
+            total=Count("id"),
+            open=Count("id", filter=Q(status=Ticket.Status.OPEN)),
+            in_progress=Count("id", filter=Q(status=Ticket.Status.IN_PROGRESS)),
+            closed=Count("id", filter=Q(status=Ticket.Status.CLOSED)),
+            low=Count("id", filter=Q(priority=Ticket.Priority.LOW)),
+            medium=Count("id", filter=Q(priority=Ticket.Priority.MEDIUM)),
+            high=Count("id", filter=Q(priority=Ticket.Priority.HIGH)),
+        )
 
         recent = qs.select_related("assigned_to", "created_by").order_by("-created_at")[:5]
 
         response_data = {
-            "total": total,
-            "open": open_count,
-            "in_progress": in_progress,
-            "closed": closed,
+            "total": aggregates["total"],
+            "open": aggregates["open"],
+            "in_progress": aggregates["in_progress"],
+            "closed": aggregates["closed"],
             "recent_tickets": TicketListSerializer(recent, many=True).data,
             "priority_breakdown": {
-                "low": qs.filter(priority=Ticket.Priority.LOW).count(),
-                "medium": qs.filter(priority=Ticket.Priority.MEDIUM).count(),
-                "high": qs.filter(priority=Ticket.Priority.HIGH).count(),
+                "low": aggregates["low"],
+                "medium": aggregates["medium"],
+                "high": aggregates["high"],
             },
         }
         cache.set(cache_key, response_data, timeout=DASHBOARD_STATS_TIMEOUT)
@@ -172,11 +178,18 @@ class MyStatsView(APIView):
         assigned = Ticket.objects.filter(assigned_to=request.user)
         created = Ticket.objects.filter(created_by=request.user)
 
+        assigned_aggregates = assigned.aggregate(
+            total=Count("id"),
+            open=Count("id", filter=Q(status=Ticket.Status.OPEN)),
+            in_progress=Count("id", filter=Q(status=Ticket.Status.IN_PROGRESS)),
+            closed=Count("id", filter=Q(status=Ticket.Status.CLOSED)),
+        )
+
         response_data = {
-            "assigned_total": assigned.count(),
-            "assigned_open": assigned.filter(status=Ticket.Status.OPEN).count(),
-            "assigned_in_progress": assigned.filter(status=Ticket.Status.IN_PROGRESS).count(),
-            "assigned_closed": assigned.filter(status=Ticket.Status.CLOSED).count(),
+            "assigned_total": assigned_aggregates["total"],
+            "assigned_open": assigned_aggregates["open"],
+            "assigned_in_progress": assigned_aggregates["in_progress"],
+            "assigned_closed": assigned_aggregates["closed"],
             "created_total": created.count(),
             "assigned_tickets": TicketListSerializer(
                 assigned.select_related("assigned_to", "created_by").order_by("-updated_at")[:10],

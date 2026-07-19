@@ -118,4 +118,8 @@ docker-data/
 *.tmp
 *.temp
 
-
+# ==========================
+# Graphify (AI Knowledge Graph)
+# ==========================
+graphify-out/
+backend/graphify-out/
