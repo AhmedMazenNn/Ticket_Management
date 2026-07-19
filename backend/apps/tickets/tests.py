@@ -438,3 +438,106 @@ class TestDashboardCache:
         )
         assert cache.get("dashboard_stats") is None
         assert cache.get(f"my_stats_{agent.id}") is None
+
+
+# ---------------------------------------------------------------------------
+# Transaction Safety — on_commit
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.django_db(transaction=True)
+class TestTicketTransactionSafety:
+    def test_event_dispatched_on_successful_commit(self, manager):
+        """When the transaction commits, publish_event is called."""
+        from unittest.mock import patch
+
+        from django.db import transaction
+
+        from apps.tickets.services import create_ticket
+
+        with patch("apps.tickets.services.publish_event") as mock_publish:
+            with transaction.atomic():
+                create_ticket(title="Tx test", created_by=manager)
+            mock_publish.assert_called_once()
+
+    def test_no_event_dispatched_on_ticket_create_rollback(self, manager):
+        """When the transaction rolls back on create_ticket, no event is published."""
+        from unittest.mock import patch
+
+        from django.db import transaction
+        from django.db.utils import IntegrityError
+
+        from apps.tickets.services import create_ticket
+
+        with patch("apps.tickets.services.publish_event") as mock_publish:
+            try:
+                with transaction.atomic():
+                    create_ticket(title="Rollback test", created_by=manager)
+                    raise IntegrityError("simulated rollback")
+            except IntegrityError:
+                pass
+
+            mock_publish.assert_not_called()
+
+    def test_no_event_dispatched_on_ticket_update_rollback(self, manager):
+        """When the transaction rolls back on update_ticket, no event is published."""
+        from unittest.mock import patch
+
+        from django.db import transaction
+        from django.db.utils import IntegrityError
+
+        from apps.tickets.services import update_ticket
+
+        ticket = TicketFactory(created_by=manager)
+
+        with patch("apps.tickets.services.publish_event") as mock_publish:
+            try:
+                with transaction.atomic():
+                    update_ticket(ticket, changed_by=manager, title="Updated")
+                    raise IntegrityError("simulated rollback")
+            except IntegrityError:
+                pass
+
+            mock_publish.assert_not_called()
+
+    def test_no_event_dispatched_on_assign_ticket_rollback(self, manager, agent):
+        """When the transaction rolls back on assign_ticket, no event is published."""
+        from unittest.mock import patch
+
+        from django.db import transaction
+        from django.db.utils import IntegrityError
+
+        from apps.tickets.services import assign_ticket
+
+        ticket = TicketFactory(created_by=manager)
+
+        with patch("apps.tickets.services.publish_event") as mock_publish:
+            try:
+                with transaction.atomic():
+                    assign_ticket(ticket, agent, changed_by=manager)
+                    raise IntegrityError("simulated rollback")
+            except IntegrityError:
+                pass
+
+            mock_publish.assert_not_called()
+
+    def test_no_ticket_persisted_on_rollback(self, manager):
+        """When the transaction rolls back, the ticket row is gone."""
+        from unittest.mock import patch
+
+        from django.db import transaction
+        from django.db.utils import IntegrityError
+
+        from apps.tickets.services import create_ticket
+
+        initial_count = Ticket.objects.count()
+
+        with patch("apps.tickets.services.publish_event"):
+            try:
+                with transaction.atomic():
+                    create_ticket(title="Rollback test", created_by=manager)
+                    raise IntegrityError("simulated rollback")
+            except IntegrityError:
+                pass
+
+        assert Ticket.objects.count() == initial_count

@@ -1,6 +1,9 @@
 from __future__ import annotations
 
+from functools import partial
+
 from django.contrib.auth import get_user_model
+from django.db import transaction
 
 from apps.messaging.constants import RoutingKey
 from apps.messaging.publisher import publish_event
@@ -40,15 +43,18 @@ def create_comment(
             triggered_by=author,
         )
 
-    publish_event(
-        RoutingKey.COMMENT_CREATED,
-        {
-            "event": "comment.created",
-            "comment_id": str(comment.id),
-            "ticket_id": str(ticket.id),
-            "author": str(author.id),
-            "timestamp": comment.created_at.isoformat(),
-        },
+    transaction.on_commit(
+        partial(
+            publish_event,
+            RoutingKey.COMMENT_CREATED,
+            {
+                "event": "comment.created",
+                "comment_id": str(comment.id),
+                "ticket_id": str(ticket.id),
+                "author": str(author.id),
+                "timestamp": comment.created_at.isoformat(),
+            },
+        )
     )
 
     return comment

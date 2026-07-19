@@ -376,6 +376,7 @@ class TestNotificationStatus:
 # ---------------------------------------------------------------------------
 
 
+@pytest.mark.django_db(transaction=True)
 class TestNotificationTaskEnqueued:
     @pytest.mark.parametrize(
         "notif_type",
@@ -620,3 +621,87 @@ class TestNotificationTaskRetry:
         assert send_notification_email.max_retries == 3
         assert send_notification_email.default_retry_delay == 60
         assert send_notification_email.autoretry_for == (Exception,)
+
+
+# ---------------------------------------------------------------------------
+# Transaction Safety — on_commit
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.django_db(transaction=True)
+class TestTransactionSafety:
+    def test_task_dispatched_on_successful_commit(self, manager):
+        """When the transaction commits, send_notification_email.delay is called."""
+        from unittest.mock import patch
+
+        from django.db import transaction
+
+        from apps.notifications.services import create_notification
+
+        ticket = TicketFactory(created_by=manager)
+
+        with patch(
+            "apps.notifications.services.send_notification_email.delay"
+        ) as mock_delay:
+            with transaction.atomic():
+                create_notification(
+                    ticket=ticket,
+                    user=manager,
+                    type=Notification.Type.TICKET_ASSIGNED,
+                )
+            mock_delay.assert_called_once()
+
+    def test_no_task_dispatched_on_rollback(self, manager):
+        """When the transaction rolls back, no Celery task is dispatched."""
+        from unittest.mock import patch
+
+        from django.db import transaction
+        from django.db.utils import IntegrityError
+
+        from apps.notifications.services import create_notification
+
+        ticket = TicketFactory(created_by=manager)
+
+        with patch(
+            "apps.notifications.services.send_notification_email.delay"
+        ) as mock_delay:
+            try:
+                with transaction.atomic():
+                    create_notification(
+                        ticket=ticket,
+                        user=manager,
+                        type=Notification.Type.TICKET_ASSIGNED,
+                    )
+                    raise IntegrityError("simulated rollback")
+            except IntegrityError:
+                pass
+
+            mock_delay.assert_not_called()
+
+    def test_no_notification_persisted_on_rollback(self, manager):
+        """When the transaction rolls back, the notification row is gone."""
+        from unittest.mock import patch
+
+        from django.db import transaction
+        from django.db.utils import IntegrityError
+
+        from apps.notifications.services import create_notification
+
+        ticket = TicketFactory(created_by=manager)
+        initial_count = Notification.objects.count()
+
+        with patch(
+            "apps.notifications.services.send_notification_email.delay"
+        ):
+            try:
+                with transaction.atomic():
+                    create_notification(
+                        ticket=ticket,
+                        user=manager,
+                        type=Notification.Type.TICKET_ASSIGNED,
+                    )
+                    raise IntegrityError("simulated rollback")
+            except IntegrityError:
+                pass
+
+        assert Notification.objects.count() == initial_count
