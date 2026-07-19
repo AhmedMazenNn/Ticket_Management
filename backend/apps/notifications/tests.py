@@ -640,9 +640,7 @@ class TestTransactionSafety:
 
         ticket = TicketFactory(created_by=manager)
 
-        with patch(
-            "apps.notifications.services.send_notification_email.delay"
-        ) as mock_delay:
+        with patch("apps.notifications.services.send_notification_email.delay") as mock_delay:
             with transaction.atomic():
                 create_notification(
                     ticket=ticket,
@@ -662,9 +660,7 @@ class TestTransactionSafety:
 
         ticket = TicketFactory(created_by=manager)
 
-        with patch(
-            "apps.notifications.services.send_notification_email.delay"
-        ) as mock_delay:
+        with patch("apps.notifications.services.send_notification_email.delay") as mock_delay:
             try:
                 with transaction.atomic():
                     create_notification(
@@ -690,9 +686,7 @@ class TestTransactionSafety:
         ticket = TicketFactory(created_by=manager)
         initial_count = Notification.objects.count()
 
-        with patch(
-            "apps.notifications.services.send_notification_email.delay"
-        ):
+        with patch("apps.notifications.services.send_notification_email.delay"):
             try:
                 with transaction.atomic():
                     create_notification(
