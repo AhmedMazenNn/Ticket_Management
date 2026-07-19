@@ -18,6 +18,7 @@ from .serializers import (
     UserSerializer,
 )
 from .services import authenticate_user
+from .throttles import LoginThrottle, PasswordChangeThrottle, RefreshThrottle, RegisterThrottle
 
 User = get_user_model()
 
@@ -25,6 +26,7 @@ User = get_user_model()
 @extend_schema(tags=["Authentication"])
 class RegisterView(APIView):
     permission_classes = [AllowAny]
+    throttle_classes = [RegisterThrottle]
     serializer_class = RegisterSerializer
 
     def post(self, request: Request) -> Response:
@@ -48,6 +50,7 @@ class RegisterView(APIView):
 @extend_schema(tags=["Authentication"])
 class LoginView(APIView):
     permission_classes = [AllowAny]
+    throttle_classes = [LoginThrottle]
     serializer_class = LoginSerializer
 
     def post(self, request: Request) -> Response:
@@ -122,6 +125,7 @@ class CurrentUserView(generics.RetrieveUpdateAPIView):
 @extend_schema(tags=["Users"])
 class ChangePasswordView(APIView):
     permission_classes = [IsAuthenticated]
+    throttle_classes = [PasswordChangeThrottle]
 
     def post(self, request: Request) -> Response:
         serializer = ChangePasswordSerializer(data=request.data, context={"request": request})
@@ -164,3 +168,5 @@ class AdminUserListView(generics.ListAPIView):
 @extend_schema(tags=["Authentication"])
 class TokenRefreshView(BaseTokenRefreshView):
     """Refresh an access token."""
+
+    throttle_classes = [RefreshThrottle]
