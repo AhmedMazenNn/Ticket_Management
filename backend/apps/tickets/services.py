@@ -31,7 +31,7 @@ STATUS_LABELS = {
 }
 
 
-def _invalidate_ticket_caches(*, creator_id, assignee_id=None):
+def _invalidate_ticket_caches(*, creator_id, assignee_id=None, old_assignee_id=None):
     """Invalidate dashboard cache keys after ticket mutations."""
     cache.delete("dashboard_stats")
     cache.delete(f"dashboard_stats_agent_{creator_id}")
@@ -39,6 +39,9 @@ def _invalidate_ticket_caches(*, creator_id, assignee_id=None):
     if assignee_id and assignee_id != creator_id:
         cache.delete(f"dashboard_stats_agent_{assignee_id}")
         cache.delete(f"my_stats_{assignee_id}")
+    if old_assignee_id and old_assignee_id != creator_id and old_assignee_id != assignee_id:
+        cache.delete(f"dashboard_stats_agent_{old_assignee_id}")
+        cache.delete(f"my_stats_{old_assignee_id}")
 
 
 def _format_value(field_name: str, value) -> str | None:
@@ -106,6 +109,7 @@ def create_ticket(
 
 def update_ticket(ticket: Ticket, *, changed_by: User, **validated_data: dict) -> Ticket:
     """Update an existing ticket with the provided fields."""
+    old_assignee_id = ticket.assigned_to_id
     changes = []
     for field, new_value in validated_data.items():
         if field not in TRACKED_FIELDS:
@@ -131,6 +135,7 @@ def update_ticket(ticket: Ticket, *, changed_by: User, **validated_data: dict) -
         _invalidate_ticket_caches(
             creator_id=ticket.created_by_id,
             assignee_id=ticket.assigned_to_id,
+            old_assignee_id=old_assignee_id,
         )
         changed_fields = {field for field, _, _ in changes}
         if "status" in changed_fields:
