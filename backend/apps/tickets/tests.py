@@ -619,8 +619,6 @@ class TestAssigneeCacheInvalidation:
 class TestAdminCacheInvalidation:
     def test_admin_save_invalidates_cache(self, admin_user):
         """Admin saving a ticket via Django admin invalidates cache."""
-        from unittest.mock import patch
-
         from django.contrib.admin.sites import AdminSite
         from django.core.cache import cache
 
@@ -644,8 +642,6 @@ class TestAdminCacheInvalidation:
 
     def test_admin_save_with_assignee_change_invalidates_both_caches(self, admin_user):
         """Admin reassigning a ticket invalidates both old and new assignee caches."""
-        from unittest.mock import patch
-
         from django.contrib.admin.sites import AdminSite
         from django.core.cache import cache
 
