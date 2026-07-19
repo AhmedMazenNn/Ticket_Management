@@ -195,3 +195,142 @@ class TestUserList:
         assert response.status_code == status.HTTP_200_OK
         user_ids = [u["id"] for u in response.data]
         assert str(inactive.id) not in user_ids
+
+
+# ---------------------------------------------------------------------------
+# Throttling — Login
+# ---------------------------------------------------------------------------
+
+
+class TestLoginThrottling:
+    def test_login_succeeds_under_limit(self, api_client, user):
+        from django.core.cache import cache
+
+        cache.clear()
+        data = {"email": user.email, "password": "testpass123"}
+        for _ in range(10):
+            response = api_client.post("/api/auth/login/", data)
+            assert response.status_code == status.HTTP_200_OK
+
+    def test_login_returns_429_after_limit(self, api_client, user):
+        from django.core.cache import cache
+
+        cache.clear()
+        data = {"email": user.email, "password": "testpass123"}
+        for _ in range(10):
+            api_client.post("/api/auth/login/", data)
+        response = api_client.post("/api/auth/login/", data)
+        assert response.status_code == status.HTTP_429_TOO_MANY_REQUESTS
+
+    def test_login_invalid_credentials_still_counts_toward_limit(self, api_client, user):
+        from django.core.cache import cache
+
+        cache.clear()
+        data = {"email": user.email, "password": "wrongpassword"}
+        for _ in range(10):
+            api_client.post("/api/auth/login/", data)
+        response = api_client.post("/api/auth/login/", data)
+        assert response.status_code == status.HTTP_429_TOO_MANY_REQUESTS
+
+
+# ---------------------------------------------------------------------------
+# Throttling — Register
+# ---------------------------------------------------------------------------
+
+
+class TestRegisterThrottling:
+    def test_register_succeeds_under_limit(self, api_client):
+        from django.core.cache import cache
+
+        cache.clear()
+        for i in range(5):
+            data = {
+                "email": f"newuser{i}@example.com",
+                "password": "strongpass123",
+                "first_name": "Test",
+                "last_name": "User",
+            }
+            response = api_client.post("/api/auth/register/", data)
+            assert response.status_code == status.HTTP_201_CREATED
+
+    def test_register_returns_429_after_limit(self, api_client):
+        from django.core.cache import cache
+
+        cache.clear()
+        for i in range(5):
+            data = {
+                "email": f"throttle{i}@example.com",
+                "password": "strongpass123",
+                "first_name": "Test",
+                "last_name": "User",
+            }
+            api_client.post("/api/auth/register/", data)
+        data = {
+            "email": "overlimit@example.com",
+            "password": "strongpass123",
+            "first_name": "Test",
+            "last_name": "User",
+        }
+        response = api_client.post("/api/auth/register/", data)
+        assert response.status_code == status.HTTP_429_TOO_MANY_REQUESTS
+
+
+# ---------------------------------------------------------------------------
+# Throttling — Token Refresh
+# ---------------------------------------------------------------------------
+
+
+class TestTokenRefreshThrottling:
+    def test_refresh_succeeds_under_limit(self, api_client, user):
+        from django.core.cache import cache
+        from rest_framework_simplejwt.tokens import RefreshToken
+
+        cache.clear()
+        refresh = str(RefreshToken.for_user(user))
+        for _ in range(60):
+            response = api_client.post("/api/auth/refresh/", {"refresh": refresh})
+            assert response.status_code == status.HTTP_200_OK
+            refresh = response.data["refresh"]
+
+    def test_refresh_returns_429_after_limit(self, api_client, user):
+        from django.core.cache import cache
+        from rest_framework_simplejwt.tokens import RefreshToken
+
+        cache.clear()
+        refresh = str(RefreshToken.for_user(user))
+        for _ in range(60):
+            response = api_client.post("/api/auth/refresh/", {"refresh": refresh})
+            refresh = response.data["refresh"]
+        response = api_client.post("/api/auth/refresh/", {"refresh": refresh})
+        assert response.status_code == status.HTTP_429_TOO_MANY_REQUESTS
+
+
+# ---------------------------------------------------------------------------
+# Throttling — Change Password
+# ---------------------------------------------------------------------------
+
+
+class TestPasswordChangeThrottling:
+    def test_password_change_succeeds_under_limit(self, auth_client):
+        from django.core.cache import cache
+
+        cache.clear()
+        current_password = "testpass123"
+        for _ in range(5):
+            data = {"current_password": current_password, "new_password": "newpass123"}
+            response = auth_client.post("/api/auth/change-password/", data)
+            assert response.status_code == status.HTTP_200_OK
+            current_password = "newpass123"
+
+    def test_password_change_returns_429_after_limit(self, auth_client):
+        from django.core.cache import cache
+
+        cache.clear()
+        current_password = "testpass123"
+        for _ in range(5):
+            data = {"current_password": current_password, "new_password": "newpass123"}
+            auth_client.post("/api/auth/change-password/", data)
+            current_password = "newpass123"
+        data = {"current_password": current_password, "new_password": "anotherpass123"}
+        response = auth_client.post("/api/auth/change-password/", data)
+        assert response.status_code == status.HTTP_429_TOO_MANY_REQUESTS
